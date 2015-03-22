@@ -1,0 +1,16 @@
+{application, mixr,
+ [
+  {description, ""},
+  {vsn, "1"},
+  {registered, []},
+  {applications, [
+                  kernel,
+                  stdlib,
+                  syntax_tools,
+                  compiler,
+                  goldrush,
+                  lager
+                 ]},
+  {mod, { mixr_app, []}},
+  {env, []}
+ ]}.
