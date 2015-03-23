@@ -8,6 +8,9 @@
          , exist/2
          , save/5
          , find/1
+         , delete/1
+         , append/2
+         , prepend/2
         ]).
 
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
@@ -31,6 +34,15 @@ save(Key, Value, CAS, Expiration, Flags) ->
 
 find(Key) ->
   gen_server:call(?SERVER, {find, [Key]}).
+
+delete(Key) ->
+  gen_server:call(?SERVER, {delete, [Key]}).
+
+append(Key, Value) ->
+  gen_server:call(?SERVER, {append, [Key, Value]}).
+
+prepend(Key, Value) ->
+  gen_server:call(?SERVER, {prepend, [Key, Value]}).
 
 %% -- Gen server 
 

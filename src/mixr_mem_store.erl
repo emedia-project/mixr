@@ -5,6 +5,9 @@
          , exist/3
          , save/6
          , find/2
+         , delete/2
+         , append/3
+         , prepend/3
         ]).
 
 -record(r, {
@@ -70,6 +73,24 @@ find(State, Key) ->
       Other
   end.
 
+delete(State, Key) ->
+  case exist(State, Key, 0) of
+    {true, State} ->
+      {ok, remove(State, Key)};
+    {false, State1} ->
+      {not_found, State1}
+  end.
+
+append(State, Key, Value) ->
+  xpend(State, Key, Value, fun(Current, New) ->
+                               <<Current/binary, New/binary>>
+                           end).
+
+prepend(State, Key, Value) ->
+  xpend(State, Key, Value, fun(Current, New) ->
+                               <<New/binary, Current/binary>>
+                           end).
+
 % Private
 
 lookup(State, Key) ->
@@ -94,3 +115,21 @@ expiration(Date) ->
     Expiration > 0 -> Expiration;
     true -> 1
   end.
+
+xpend(State, Key, Value, Fun) ->
+  case lookup(State, Key) of
+    {{ok, 
+      #r{key = Key, value = CurrentValue, cas = CAS, flag = 0} = Data}, 
+     State1} ->
+      {{ok, CAS}, 
+       lists:keyreplace(
+         Key, 1, State1, 
+         {Key, Data#r{value = Fun(CurrentValue, Value)}})};
+    {{ok, 
+      #r{cas = CAS}}, 
+     State1} ->
+      {{ok, CAS}, State1};
+    Other ->
+      Other
+  end.
+

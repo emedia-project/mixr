@@ -61,7 +61,7 @@ response(
      body_length = TotalBody,
      opaque = Opaque,
      cas = CAS
-    }, Extras, Keys, Value) ->
+    }, Extras, Key, Value) ->
   {reply, <<Magic, 
             Opcode, 
             KeyLength:16, 
@@ -72,18 +72,36 @@ response(
             Opaque:32, 
             CAS:64, 
             Extras/binary, 
-            Keys/binary, 
+            Key/binary, 
             Value/binary>>}.
 
-error_reponse(Opcode, Status) ->
-  error_reponse(Opcode, Status, 0).
-error_reponse(Opcode, Status, Opaque) ->
+response_or_quiet(Header) ->
+  response_or_quiet(Header, <<>>, <<>>, <<>>).
+response_or_quiet(#response_header{opcode = Opcode} = Header, Extras, Key, Value) ->
+  if
+    ?QUIET(Opcode) ->
+      noreply();
+    true ->
+      response(Header, Extras, Key, Value)
+  end.
+
+error_response(Opcode, Status) ->
+  error_response(Opcode, Status, 0).
+error_response(Opcode, Status, Opaque) ->
   response(
     #response_header{
        opcode = Opcode,
        status = Status,
        opaque = Opaque
       }, <<>>, <<>>, <<>>).
+
+error_response_or_quiet(Opcode, Status, Opaque) ->
+  if
+    ?QUIET(Opcode) ->
+      noreply();
+    true ->
+      error_response(Opcode, Status, Opaque)
+  end.
 
 noreply() -> noreply.
 
@@ -100,7 +118,7 @@ action(#request_header{magic = ?REQUEST,
     <<>>,
     ?MIXR_VERSION);
 
-%% Set
+%% Set, Set Quietly, Add, Add Quietly, Replace, Replace Quietly
 action(#request_header{magic = ?REQUEST, 
                        opcode = Opcode, 
                        key_length = KeyLength, 
@@ -108,28 +126,34 @@ action(#request_header{magic = ?REQUEST,
                        body_length = BodyLength, 
                        opaque = Opaque,
                        cas = CAS}, 
-       <<Flags:32, Expiration:32, Body/binary>> = Body1) when Opcode =:= ?OP_SET -> 
+       <<Flags:32, Expiration:32, Body/binary>> = Body1) when Opcode =:= ?OP_SET ;
+                                                              Opcode =:= ?OP_ADD ;
+                                                              Opcode =:= ?OP_REPLACE ;
+                                                              Opcode =:= ?OP_SETQ ;
+                                                              Opcode =:= ?OP_ADDQ ;
+                                                              Opcode =:= ?OP_REPLACEQ -> 
   if
-    size(Body1) =:= BodyLength, ExtraLength =:= 8 ->
+    size(Body1) =:= BodyLength andalso ExtraLength =:= 8 ->
       ValueSize = BodyLength - ExtraLength - KeyLength,
       <<Key:KeyLength/binary, Value:ValueSize/binary>> = Body,
-      if
-        CAS =:= 0 -> lager:info("No CAS faild if key exist!"); %% TODO
-        true -> lager:info("CAS, faild if key have a different CAS") %% TODO
-      end,
-      NewCAS = cas(CAS),
-      lager:info("Store ~p = ~p / CAS = ~p / Expiration = ~p / Flags = ~p", [Key, Value, NewCAS, Expiration, Flags]),
-      case mixr_store:save(Key, Value, NewCAS, Expiration, Flags) of
-        error ->
-          error_reponse(Opcode, ?STATUS_INTERNAL_ERROR, Opaque);
-        {ok, NewCAS} ->
-          response(
-            #response_header{opcode = ?OP_SET,
-                             opaque = Opaque,
-                             cas = NewCAS})
+      lager:info("[SET/~p] ~p = ~p", [Opcode, Key, Value]),
+      case set_data(mixr_store:exist(Key, CAS), Opcode) of
+        false -> 
+          error_response(Opcode, ?STATUS_KEY_EXISTS, Opaque);
+        true -> 
+          NewCAS = cas(CAS),
+          case mixr_store:save(Key, Value, NewCAS, Expiration, Flags) of
+            error ->
+              error_response(Opcode, ?STATUS_INTERNAL_ERROR, Opaque);
+            {ok, NewCAS} ->
+              response_or_quiet(
+                #response_header{opcode = Opcode,
+                                 opaque = Opaque,
+                                 cas = NewCAS})
+          end
       end;
     true ->
-      error_reponse(Opcode, ?STATUS_INVALID_ARGUMENT, Opaque)
+      error_response(Opcode, ?STATUS_INVALID_ARGUMENT, Opaque)
   end;
 
 %% Get, Get Quietly, Get Key, Get Key Quietly
@@ -144,8 +168,8 @@ action(#request_header{magic = ?REQUEST,
                                            Opcode =:= ?OP_GETK ;
                                            Opcode =:= ?OP_GETKQ ->
   if 
-    size(Key) =:= BodyLength, KeyLength =:= BodyLength ->
-      lager:info("Get value for Key = ~p", [Key]),
+    size(Key) =:= BodyLength andalso KeyLength =:= BodyLength ->
+      lager:info("[GET/~p] ~p", [Opcode, Key]),
       case mixr_store:find(Key) of
         {ok, {Key, Value, CAS, _, Flags}} ->
           Key1 = if
@@ -163,27 +187,91 @@ action(#request_header{magic = ?REQUEST,
                opaque = Opaque,
                cas = CAS}, Flags1, Key1, Value);
         not_found ->
-          error_reponse(Opcode, ?STATUS_KEY_NOT_FOUND, Opaque);
-        E ->
-          lager:info("Invalid find response: ~p", [E]),
-          error_reponse(Opaque, ?STATUS_INTERNAL_ERROR, Opaque)
+          error_response_or_quiet(Opcode, ?STATUS_KEY_NOT_FOUND, Opaque);
+        _ ->
+          error_response(Opaque, ?STATUS_INTERNAL_ERROR, Opaque)
       end;
     true ->
-      if
-        Opcode =:= ?OP_GETQ ; Opcode =:= ?OP_GETKQ ->
-          noreply();
-        true ->
-          error_reponse(Opcode, ?STATUS_INVALID_ARGUMENT, Opaque)
-      end
+      error_response(Opcode, ?STATUS_INVALID_ARGUMENT, Opaque)
   end;
+
+%% Delete
+action(#request_header{magic = ?REQUEST, 
+                       opcode = Opcode, 
+                       key_length = KeyLength, 
+                       extra_length = 0, 
+                       body_length = BodyLength, 
+                       opaque = Opaque}, Key) when Opcode =:= ?OP_DELETE ; 
+                                                   Opcode =:= ?OP_DELETEQ ->
+  if 
+    size(Key) =:= BodyLength andalso KeyLength =:= BodyLength ->
+      lager:info("[DELETE/~p] ~p", [Opcode, Key]),
+      case mixr_store:delete(Key) of
+        ok -> 
+          response_or_quiet(
+            #response_header{opcode = Opcode,
+                             opaque = Opaque});
+        not_found ->
+          error_response_or_quiet(Opcode, ?STATUS_KEY_NOT_FOUND, Opaque)
+      end;
+    true ->
+      error_response(Opcode, ?STATUS_INVALID_ARGUMENT, Opaque)
+  end;
+
+%% Increment, Decrement
+
+%% quit
+
+%% Flush
+
+%% Append, Prepend
+action(#request_header{magic = ?REQUEST, 
+                       opcode = Opcode, 
+                       key_length = KeyLength, 
+                       extra_length = ExtraLength, 
+                       body_length = BodyLength, 
+                       opaque = Opaque}, 
+       Body) when Opcode =:= ?OP_APPEND ;
+                  Opcode =:= ?OP_APPENDQ ;
+                  Opcode =:= ?OP_PREPEND ;
+                  Opcode =:= ?OP_PREPENDQ ->
+  if
+    size(Body) =:= BodyLength andalso ExtraLength =:= 0 ->
+      ValueSize = BodyLength - KeyLength,
+      <<Key:KeyLength/binary, Value:ValueSize/binary>> = Body,
+      lager:info("[APPEND|PREPEND/~p] ~p :: ~p", [Opcode, Key, Value]),
+      Result = if 
+                 Opcode =:= ?OP_APPEND orelse Opcode =:= ?OP_APPENDQ ->
+                   mixr_store:append(Key, Value);
+                 true ->
+                   mixr_store:prepend(Key, Value)
+               end,
+      case Result of
+        {ok, CAS} ->
+          response_or_quiet(
+            #response_header{opcode = Opcode,
+                             opaque = Opaque,
+                             cas = CAS});
+        not_found ->
+          error_response(Opcode, ?STATUS_KEY_NOT_FOUND, Opaque);
+        error ->
+          error_response(Opaque, ?STATUS_INTERNAL_ERROR, Opaque)
+      end;
+    true ->
+      error_response(Opcode, ?STATUS_INVALID_ARGUMENT, Opaque)
+  end;
+
+%% noop
+
+%% Stat
 
 %% Errors
 action(#request_header{magic = ?REQUEST,
                        opcode = Opcode,
                        opaque = Opaque}, _) ->
-  error_reponse(Opcode, ?STATUS_INVALID_ARGUMENT, Opaque);
+  error_response(Opcode, ?STATUS_NOT_SUPPORTED, Opaque);
 action(_, _) ->
-  error_reponse(?OP_GET, ?STATUS_UNKNOWN_COMMAND).
+  error_response(?OP_GET, ?STATUS_UNKNOWN_COMMAND).
 
 %% CAS
 cas(0) ->
@@ -191,4 +279,11 @@ cas(0) ->
   (Mega*1000000+Sec)*1000000+Micro;
 cas(CAS) -> CAS.
 
+set_data(_, ?OP_SET) -> true;
+set_data(true, ?OP_REPLACE) -> true;
+set_data(false, ?OP_ADD) -> true;
+set_data(_, ?OP_SETQ) -> true;
+set_data(true, ?OP_REPLACEQ) -> true;
+set_data(false, ?OP_ADDQ) -> true;
+set_data(_, _) -> false.
 
