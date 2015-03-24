@@ -4,6 +4,7 @@
 
 -export([
          start_link/0
+         , count/0
          , exist/1
          , exist/2
          , save/5
@@ -11,6 +12,7 @@
          , delete/1
          , append/2
          , prepend/2
+         , module/0
         ]).
 
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
@@ -22,6 +24,9 @@
 
 start_link() ->
   gen_server:start_link({local, ?SERVER}, ?MODULE, [mixr_config:store()], []).
+
+count() ->
+  gen_server:call(?SERVER, {count, []}).
 
 exist(Key) ->
   exist(Key, 0).
@@ -44,11 +49,16 @@ append(Key, Value) ->
 prepend(Key, Value) ->
   gen_server:call(?SERVER, {prepend, [Key, Value]}).
 
+module() ->
+  gen_server:call(?SERVER, module).
+
 %% -- Gen server 
 
 init([StoreModule]) ->
   {ok, #storage{module = StoreModule, state = StoreModule:init()}}.
 
+handle_call(module, _, #storage{module = Module} = State) ->
+  {reply, Module, State};
 handle_call({Action, Args}, _From, #storage{module = StoreModule, state = StorageState} = State) ->
   {Replay, NewState} = erlang:apply(StoreModule, Action, [StorageState|Args]),
   {reply, Replay, State#storage{state = NewState}}.

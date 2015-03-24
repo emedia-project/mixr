@@ -10,7 +10,7 @@
          start_link/0
          , ip/0
          , port/0
-         , timeout/0
+         , auto_discover/0
          , store/0
         ]).
 
@@ -31,7 +31,7 @@ start_link() ->
 
 ?ACCESSOR(ip).
 ?ACCESSOR(port).
-?ACCESSOR(timeout).
+?ACCESSOR(auto_discover).
 ?ACCESSOR(store).
 
 %% ------------------------------------------------------------------
@@ -45,7 +45,7 @@ init(_Args) ->
                      end, 
                      #{ip => undefined,
                        port => 11212,
-                       timeout => infinity,
+                       auto_discover => [{enable, false}],
                        store => mixr_mem_store}, 
                      application:get_all_env(mixr))}
   catch

@@ -12,8 +12,13 @@ handle_data(Sock, Data, State) ->
   lager:info("Request_header = ~p, body = ~p", [Header1, Body]),
   case action(Header1, Body) of
     {reply, Result} ->
-      lager:info("Send response ~p", [Result]),
-      gen_tcp:send(Sock, Result);
+      lists:foreach(fun(Response) ->
+                        lager:info("Send response ~p", [Response]),
+                        gen_tcp:send(Sock, Response)
+                    end, if
+                           is_list(Result) -> Result;
+                           true -> [Result]
+                         end);
     noreply ->
       lager:info("No reply")
   end,
@@ -50,7 +55,10 @@ parse_request_header(<<Magic,
 
 response(Header) ->
   response(Header, <<>>, <<>>, <<>>).
-response(
+response(Header, Extras, Key, Value) ->
+  {reply, build_response(Header, Extras, Key, Value)}.
+
+build_response(
   #response_header{
      magic = Magic,
      opcode = Opcode,
@@ -62,18 +70,18 @@ response(
      opaque = Opaque,
      cas = CAS
     }, Extras, Key, Value) ->
-  {reply, <<Magic, 
-            Opcode, 
-            KeyLength:16, 
-            ExtraLength, 
-            DataType, 
-            Status:16, 
-            TotalBody:32, 
-            Opaque:32, 
-            CAS:64, 
-            Extras/binary, 
-            Key/binary, 
-            Value/binary>>}.
+  <<Magic, 
+    Opcode, 
+    KeyLength:16, 
+    ExtraLength, 
+    DataType, 
+    Status:16, 
+    TotalBody:32, 
+    Opaque:32, 
+    CAS:64, 
+    Extras/binary, 
+    Key/binary, 
+    Value/binary>>.
 
 response_or_quiet(Header) ->
   response_or_quiet(Header, <<>>, <<>>, <<>>).
@@ -264,6 +272,23 @@ action(#request_header{magic = ?REQUEST,
 %% noop
 
 %% Stat
+action(#request_header{magic = ?REQUEST,
+                       opcode = ?OP_STAT,
+                       opaque = Opaque}, _) ->
+  {reply, lists:map(fun({Key, Value}) ->
+                        build_response(#response_header{
+                                          opcode = ?OP_STAT,
+                                          opaque = Opaque,
+                                          key_length = size(Key),
+                                          body_length = size(Key) + size(Value),
+                                          extra_length = 0
+                                         }, <<>>, Key, Value)
+                    end, [{<<"pid">>, eutils:to_binary(os:getpid())}, 
+                          {<<"version">>, os_version()},
+                          {<<"time">>, os_time()},
+                          {<<"keys">>, eutils:to_binary(mixr_store:count())},
+                          {<<"storage">>, eutils:to_binary(mixr_store:module())},
+                          {<<>>, <<>>}])}; 
 
 %% Errors
 action(#request_header{magic = ?REQUEST,
@@ -286,4 +311,17 @@ set_data(_, ?OP_SETQ) -> true;
 set_data(true, ?OP_REPLACEQ) -> true;
 set_data(false, ?OP_ADDQ) -> true;
 set_data(_, _) -> false.
+
+os_version() ->
+  {_, OsName} = os:type(),
+  case os:version() of
+    {A, B, C} -> 
+      eutils:to_binary(lists:flatten(io_lib:format("(~s) ~B.~B.~B", [OsName, A, B, C])));
+    Other -> 
+      eutils:to_binary(lists:flatten(io_lib:format("(~s) ~s", [OsName, Other])))
+  end.
+
+os_time() ->
+  {Mega,Sec,Micro} = os:timestamp(),
+  eutils:to_binary((Mega*1000000+Sec)*1000000+Micro).
 

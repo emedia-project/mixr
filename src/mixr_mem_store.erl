@@ -2,6 +2,7 @@
 
 -export([
          init/0
+         , count/1
          , exist/3
          , save/6
          , find/2
@@ -19,6 +20,9 @@
 
 init() ->
   [].
+
+count(State) ->
+  {length(State), State}.
 
 exist(State, Key, CAS) ->
   case lists:keyfind(Key, 1, State) of

@@ -22,7 +22,7 @@ test: compile
 	@$(REBAR) skip_deps=true eunit
 
 dev: compile
-	@erl -pa ebin include deps/*/ebin deps/*/include -config config/mixr.config
+	@erl -pa ebin include deps/*/ebin deps/*/include -config config/mixr.config -args_file config/vm.args
 
 analyze: checkplt
 	@$(REBAR) skip_deps=true dialyze
