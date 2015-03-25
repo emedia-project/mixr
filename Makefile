@@ -1,8 +1,12 @@
 REBAR = ./rebar
+XREL  = ./xrel
 
 .PHONY: compile get-deps test
 
 all: compile
+
+release: compile
+	@$(XREL) tar
 
 compile: get-deps
 	@$(REBAR) compile
