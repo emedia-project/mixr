@@ -2,6 +2,7 @@
 -include("../include/mixr.hrl"). 
 
 -export([handle_data/3, handle_accept/2, handle_close/2]).
+-export([find/3]).
 
 handle_data(Sock, Data, State) ->
   {Header1, Body} = case Data of
@@ -166,42 +167,12 @@ action(#request_header{magic = ?REQUEST,
 
 %% Get, Get Quietly, Get Key, Get Key Quietly
 action(#request_header{magic = ?REQUEST, 
-                       opcode = Opcode, 
-                       key_length = KeyLength, 
-                       extra_length = 0, 
-                       body_length = BodyLength, 
-                       opaque = Opaque,
-                       cas = 0}, Key) when Opcode =:= ?OP_GET ; 
-                                           Opcode =:= ?OP_GETQ ;
-                                           Opcode =:= ?OP_GETK ;
-                                           Opcode =:= ?OP_GETKQ ->
-  if 
-    size(Key) =:= BodyLength andalso KeyLength =:= BodyLength ->
-      lager:info("[GET/~p] ~p", [Opcode, Key]),
-      case mixr_store:find(Key) of
-        {ok, {Key, Value, CAS, _, Flags}} ->
-          Key1 = if
-                   Opcode =:= ?OP_GETK ; Opcode =:= ?OP_GETKQ ->
-                     Key;
-                   true ->
-                     <<>>
-                 end,
-          Flags1 = <<Flags:32>>,
-          response(
-            #response_header{
-               opcode = ?OP_GET,
-               extra_length = size(Flags1),
-               body_length = size(Key1) + size(Value) + size(Flags1),
-               opaque = Opaque,
-               cas = CAS}, Flags1, Key1, Value);
-        not_found ->
-          error_response_or_quiet(Opcode, ?STATUS_KEY_NOT_FOUND, Opaque);
-        _ ->
-          error_response(Opaque, ?STATUS_INTERNAL_ERROR, Opaque)
-      end;
-    true ->
-      error_response(Opcode, ?STATUS_INVALID_ARGUMENT, Opaque)
-  end;
+                       opcode = Opcode} = Header, 
+       Key) when Opcode =:= ?OP_GET ; 
+                 Opcode =:= ?OP_GETQ ;
+                 Opcode =:= ?OP_GETK ;
+                 Opcode =:= ?OP_GETKQ ->
+  find(mixr_config:search_policy(), Header, Key);
 
 %% Delete
 action(#request_header{magic = ?REQUEST, 
@@ -288,6 +259,9 @@ action(#request_header{magic = ?REQUEST,
                           {<<"time">>, os_time()},
                           {<<"keys">>, eutils:to_binary(mixr_store:count())},
                           {<<"storage">>, eutils:to_binary(mixr_store:module())},
+                          {<<"ip">>, mixr_config:server_ip()},
+                          {<<"port">>, eutils:to_binary(mixr_config:port())},
+                          {<<"servers">>, mixr_discover:servers()},
                           {<<>>, <<>>}])}; 
 
 %% Errors
@@ -297,6 +271,97 @@ action(#request_header{magic = ?REQUEST,
   error_response(Opcode, ?STATUS_NOT_SUPPORTED, Opaque);
 action(_, _) ->
   error_response(?OP_GET, ?STATUS_UNKNOWN_COMMAND).
+
+find(local, #request_header{magic = ?REQUEST, 
+                            opcode = Opcode, 
+                            key_length = KeyLength, 
+                            extra_length = 0, 
+                            body_length = BodyLength, 
+                            opaque = Opaque,
+                            cas = 0}, Key) ->
+  if 
+    size(Key) =:= BodyLength andalso KeyLength =:= BodyLength ->
+      lager:info("[GET/~p] ~p", [Opcode, Key]),
+      case mixr_store:find(Key) of
+        {ok, {Key, Value, CAS, _, Flags}} ->
+          Key1 = if
+                   Opcode =:= ?OP_GETK ; Opcode =:= ?OP_GETKQ ->
+                     Key;
+                   true ->
+                     <<>>
+                 end,
+          Flags1 = <<Flags:32>>,
+          response(
+            #response_header{
+               opcode = ?OP_GET,
+               extra_length = size(Flags1),
+               body_length = size(Key1) + size(Value) + size(Flags1),
+               opaque = Opaque,
+               cas = CAS}, Flags1, Key1, Value);
+        not_found ->
+          error_response_or_quiet(Opcode, ?STATUS_KEY_NOT_FOUND, Opaque);
+        _ ->
+          error_response(Opaque, ?STATUS_INTERNAL_ERROR, Opaque)
+      end;
+    true ->
+      error_response(Opcode, ?STATUS_INVALID_ARGUMENT, Opaque)
+  end;
+find(Policy, Header, Key) ->
+  do_find(Policy, Header, Key, mixr_discover:server_nodes(), [find(local, Header, Key)]).
+
+do_find(_, _, _, [], [Current]) -> Current;
+do_find(first, Header, Key, [Node|Rest], [Current]) ->
+  case is_error(Current) of
+    {false, Response} -> 
+      Response;
+    {true, _} ->
+      do_find(first, Header, Key, Rest, [rpc:call(Node, mixr_dispatcher, find, [local, Header, Key])])
+  end;
+do_find(Policy, _, _, [], [Last|Other] = Results) ->
+  Results1 = case is_error(Last) of
+               {true, _} -> Other;
+               {false, _} -> Results
+             end,
+  [Final|_] = lists:sort(fun({reply, <<?RESPONSE, 
+                                       _, 
+                                       _:16, 
+                                       _, 
+                                       _, 
+                                       ?STATUS_NO_ERROR:16, 
+                                       _:32, 
+                                       _:32, 
+                                       CAS1:64, 
+                                       _/binary>>},
+                             {reply, <<?RESPONSE, 
+                                       _, 
+                                       _:16, 
+                                       _, 
+                                       _, 
+                                       ?STATUS_NO_ERROR:16, 
+                                       _:32, 
+                                       _:32, 
+                                       CAS2:64, 
+                                       _/binary>>})->
+                             if
+                               Policy =:= lower_cas -> 
+                                 CAS1 =< CAS2;
+                               true ->
+                                 CAS1 > CAS2
+                             end
+                         end, {}, Results1),
+  Final;
+do_find(Policy, Header, Key, [Node|Rest], [Last|Other] = All) ->
+  case is_error(Last) of
+    {false, _} ->
+      do_find(Policy, Header, Key, Rest, [rpc:call(Node, mixr_dispatcher, find, [local, Header, Key])|All]);
+    {true, _} ->
+      do_find(Policy, Header, Key, Rest, [rpc:call(Node, mixr_dispatcher, find, [local, Header, Key])|Other])
+  end.
+
+is_error({reply, <<?RESPONSE, _, _:16, _, _, ?STATUS_NO_ERROR:16, _/binary>>} = Response) ->
+  {false, Response};
+is_error(Response) ->
+  {true, Response}.
 
 %% CAS
 cas(0) ->

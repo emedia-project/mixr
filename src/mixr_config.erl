@@ -12,6 +12,8 @@
          , port/0
          , auto_discover/0
          , store/0
+         , search_policy/0
+         , server_ip/0
         ]).
 
 -define(ACCESSOR(Type), Type() -> gen_server:call(?MODULE, Type)).
@@ -33,6 +35,13 @@ start_link() ->
 ?ACCESSOR(port).
 ?ACCESSOR(auto_discover).
 ?ACCESSOR(store).
+?ACCESSOR(search_policy).
+
+server_ip() ->
+  case ip() of
+    IP when is_tuple(IP), IP =/= {0,0,0,0} -> eutils:to_binary(enet:ip_to_str(IP));
+    _ -> eutils:to_binary(enet:ip_to_str(enet:get_active_ip()))
+  end.
 
 %% ------------------------------------------------------------------
 %% gen_server Function Definitions
@@ -46,6 +55,7 @@ init(_Args) ->
                      #{ip => undefined,
                        port => 11212,
                        auto_discover => [{enable, false}],
+                       search_policy => local,
                        store => mixr_mem_store}, 
                      application:get_all_env(mixr))}
   catch
