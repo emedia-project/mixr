@@ -6,7 +6,7 @@
 
 -module(mixr_discover).
 -behaviour(gen_server).
--export([start_link/0, discover/0, server_addr/0, servers/0, server_nodes/0]).
+-export([start_link/0, discover/0, server_addr/0, servers_addrs/0, servers_nodes/0]).
 -export([init/1,
          handle_call/3,
          handle_cast/2,
@@ -44,7 +44,7 @@ discover() ->
 server_addr() ->
   <<(mixr_config:server_ip())/binary, ":", (eutils:to_binary(mixr_config:port()))/binary>>.
 
-servers() ->
+servers_addrs() ->
   ebinary:join(lists:foldl(fun(Node, Acc) ->
                                case rpc:call(Node, mixr_discover, server_addr, []) of
                                  {badrpc, _} -> Acc;
@@ -52,7 +52,7 @@ servers() ->
                                end
                            end, [], erlang:nodes()), <<",">>).
 
-server_nodes() ->
+servers_nodes() ->
   lists:foldl(fun(Node, Acc) ->
                   case rpc:call(Node, mixr_discover, server_addr, []) of
                     {badrpc, _} -> Acc;

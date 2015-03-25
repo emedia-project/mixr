@@ -261,7 +261,7 @@ action(#request_header{magic = ?REQUEST,
                           {<<"storage">>, eutils:to_binary(mixr_store:module())},
                           {<<"ip">>, mixr_config:server_ip()},
                           {<<"port">>, eutils:to_binary(mixr_config:port())},
-                          {<<"servers">>, mixr_discover:servers()},
+                          {<<"servers">>, mixr_discover:servers_addrs()},
                           {<<>>, <<>>}])}; 
 
 %% Errors
@@ -307,7 +307,7 @@ find(local, #request_header{magic = ?REQUEST,
       error_response(Opcode, ?STATUS_INVALID_ARGUMENT, Opaque)
   end;
 find(Policy, Header, Key) ->
-  do_find(Policy, Header, Key, mixr_discover:server_nodes(), [find(local, Header, Key)]).
+  do_find(Policy, Header, Key, mixr_discover:servers_nodes(), [find(local, Header, Key)]).
 
 do_find(_, _, _, [], [Current]) -> Current;
 do_find(first, Header, Key, [Node|Rest], [Current]) ->
