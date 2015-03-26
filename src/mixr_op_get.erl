@@ -3,7 +3,7 @@
 
 -export([action/3]).
 
-action(local, #request_header{magic = ?REQUEST, 
+action(Policy, #request_header{magic = ?REQUEST, 
                               opcode = Opcode, 
                               key_length = KeyLength, 
                               extra_length = 0, 
@@ -13,8 +13,9 @@ action(local, #request_header{magic = ?REQUEST,
   if 
     size(Key) =:= BodyLength andalso KeyLength =:= BodyLength ->
       lager:info("[GET/~p] ~p", [Opcode, Key]),
-      case mixr_store:find(Key) of
-        {ok, {Key, Value, CAS, _, Flags}} ->
+      case find(Policy, Key) of
+        {_, {Key, Value, CAS, _, Flags}} = Data ->
+          _ = save_if_needed(Policy, Data),
           Key1 = if
                    Opcode =:= ?OP_GETK ; Opcode =:= ?OP_GETKQ ->
                      Key;
@@ -36,55 +37,39 @@ action(local, #request_header{magic = ?REQUEST,
       end;
     true ->
       mixr_operation:error_response(Opcode, ?STATUS_INVALID_ARGUMENT, Opaque)
-  end;
-action(Policy, Header, Key) ->
-  do_action(Policy, Header, Key, mixr_discover:servers_nodes(), [action(local, Header, Key)]).
-
-do_action(_, _, _, [], [Current]) -> Current;
-do_action(first, Header, Key, [Node|Rest], [Current]) ->
-  case mixr_operation:is_error(Current) of
-    {false, Response} -> 
-      Response;
-    {true, _} ->
-      do_action(first, Header, Key, Rest, [rpc:call(Node, ?MODULE, action, [local, Header, Key])])
-  end;
-do_action(Policy, _, _, [], [Last|Other] = Results) ->
-  Results1 = case mixr_operation:is_error(Last) of
-               {true, _} -> Other;
-               {false, _} -> Results
-             end,
-  [Final|_] = lists:sort(fun({reply, <<?RESPONSE, 
-                                       _, 
-                                       _:16, 
-                                       _, 
-                                       _, 
-                                       ?STATUS_NO_ERROR:16, 
-                                       _:32, 
-                                       _:32, 
-                                       CAS1:64, 
-                                       _/binary>>},
-                             {reply, <<?RESPONSE, 
-                                       _, 
-                                       _:16, 
-                                       _, 
-                                       _, 
-                                       ?STATUS_NO_ERROR:16, 
-                                       _:32, 
-                                       _:32, 
-                                       CAS2:64, 
-                                       _/binary>>})->
-                             if
-                               Policy =:= lower_cas -> 
-                                 CAS1 =< CAS2;
-                               true ->
-                                 CAS1 > CAS2
-                             end
-                         end, {}, Results1),
-  Final;
-do_action(Policy, Header, Key, [Node|Rest], [Last|Other] = All) ->
-  case mixr_operation:is_error(Last) of
-    {false, _} ->
-      do_action(Policy, Header, Key, Rest, [rpc:call(Node, ?MODULE, action, [local, Header, Key])|All]);
-    {true, _} ->
-      do_action(Policy, Header, Key, Rest, [rpc:call(Node, ?MODULE, action, [local, Header, Key])|Other])
   end.
+
+find(local, Key) ->
+  case mixr_store:find(Key) of
+    {ok, Data} -> {local, Data};
+    _ -> not_found
+  end;
+find(Policy, Key) ->
+  do_find(Policy, Key, mixr_discover:servers_nodes(), find(local, Key)).
+
+do_find(_, _, [], Result) -> Result;
+do_find(first, _, _, Result) when Result =/= not_found -> Result;
+do_find(Policy, Key, [Node|Rest], not_found) ->
+  do_find(Policy, Key, Rest, rpc:call(Node, mixr_store, find, [Key]));
+do_find(Policy, Key, [Node|Rest], {_, {_, _, CAS, _, _}} = Current) ->
+  case rpc:call(Node, mixr_store, find, [Key]) of
+    {ok, {_, _, CAS1, _, _}} = Result -> 
+      case {CAS1 > CAS, Policy} of
+        R when R =:= {true, higher_cas}; R =:= {false, lower_cas} ->
+          do_find(Policy, Key, Rest, Result);
+        _ ->
+          do_find(Policy, Key, Rest, Current)
+      end;
+    _ -> 
+      do_find(Policy, Key, Rest, Current)
+  end.
+
+save_if_needed(Policy, {ok, {Key, Value, CAS, Expiration, Flags}}) when Policy =:= first_s ;
+                                                                        Policy =:= higher_cas_s ;
+                                                                        Policy =:= lower_cas_s ->
+  case mixr_store:save(Key, Value, CAS, Expiration, Flags) of
+    error -> lager:error("[GET] Failed to save data locally");
+    _ -> lager:info("[GET] Data save locally")
+  end;
+save_if_needed(_, _) -> ok.
+
