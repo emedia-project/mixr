@@ -1,4 +1,4 @@
--define(MIXR_VERSION, <<"1.4.15">>).
+-define(MIXR_VERSION, mixr_config:version()).
 
 -define(REQUEST, 128).
 -define(RESPONSE, 129).

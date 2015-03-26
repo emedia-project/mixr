@@ -14,6 +14,7 @@
          , store/0
          , search_policy/0
          , server_ip/0
+         , version/0
         ]).
 
 -define(ACCESSOR(Type), Type() -> gen_server:call(?MODULE, Type)).
@@ -41,6 +42,12 @@ server_ip() ->
   case ip() of
     IP when is_tuple(IP), IP =/= {0,0,0,0} -> eutils:to_binary(enet:ip_to_str(IP));
     _ -> eutils:to_binary(enet:ip_to_str(enet:get_active_ip()))
+  end.
+
+version() ->
+  case application:get_key(mixr, vsn) of
+    {ok, Vsn} -> eutils:to_binary(Vsn);
+    _ -> <<"undefined">>
   end.
 
 %% ------------------------------------------------------------------
