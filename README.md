@@ -2,14 +2,14 @@
 
 memcached rewriten in pure Erlang
 
-# Support
+## Support
 
 This version, support :
 
 * the [binary protocol](https://code.google.com/p/memcached/wiki/BinaryProtocolRevamped).
 * a custom REST API.
 
-## Memcached commands supported :
+### Memcached commands supported :
 
 * SET
 * ADD
@@ -28,7 +28,39 @@ This version, support :
 * PREPEND
 * PREPENDQ
 
-## REST API :
+## Configuration
+
+* `ip` :: `string() | undefined`
+* `port` :: `integer() >= 1, <= 65535`
+* `store` :: atom() | tuple()` : see below
+* `search_policy` :: `first | first_s | higher_cas | higher_cas_s | lower_cas | lower_cas_s | local`
+* `auto_discover` :: `list()`
+* `rest` :: `list()`
+
+## Store
+
+#### `mixr_mem_store`
+
+"On memory" storage
+
+#### `mixr_ets_store`
+
+Store data on an ETS file
+
+Parameters :
+
+* `file` :: `string()` : Name of the ETS file (default: `~/.data-<node()>.mixr`)
+* `tid` :: `atom()` : Name of the ETS file (default: `mixr`)
+
+### Auto discover
+
+% TODO
+
+### REST
+
+% TODO
+
+#### API
 
 **GET /count**
 
@@ -43,21 +75,6 @@ This version, support :
 **PUT /d/:key/cas/:cas**
 
 **DELETE /d/:key/cas/:cas**
-
-## Stores
-
-### `mixr_mem_store`
-
-"On memory" storage
-
-### `mixr_ets_store`
-
-Store data on an ETS file
-
-Parameters :
-
-* `file` :: `string()` : Name of the ETS file (default: `~/.data-<node()>.mixr`)
-* `tid` :: `atom()` : Name of the ETS file (default: `mixr`)
 
 ## TODO
 
