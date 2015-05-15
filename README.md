@@ -34,9 +34,13 @@ This version, support :
 
 **GET /d/:key**
 
+**GET /d/:key/cas**
+
+**GET /d/:key/expire**
+
 **POST /d/:key[/expire/:seconds]**
 
-**PUT /d/:key/cas/:cas[/expire/:expire]**
+**PUT /d/:key/cas/:cas**
 
 **DELETE /d/:key/cas/:cas**
 

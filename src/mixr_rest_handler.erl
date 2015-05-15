@@ -16,7 +16,8 @@
 -record(q, {
           key,
           cas,
-          expire
+          expire,
+          extra
          }).
 
 init(Req, Opts) ->
@@ -43,7 +44,11 @@ resource_exists(Req, _State) ->
                  expire = case cowboy_req:binding(expire, Req) of
                             undefined -> 0;
                             Expiration -> eutils:to_integer(Expiration)
-                          end}}.
+                          end,
+                 extra = case cowboy_req:binding(extra, Req) of
+                           undefined -> value;
+                           Extra -> eutils:to_atom(Extra)
+                         end}}.
 
 delete_resource(Req, #q{key = Key, cas = CAS} = State) ->
   case CAS =/= 0 andalso mixr_store:exist(Key, CAS) of
@@ -58,13 +63,17 @@ delete_resource(Req, #q{key = Key, cas = CAS} = State) ->
       {stop, cowboy_req:reply(405, Req), State}
   end.
 
-action(Req, #q{key = Key, cas = CAS, expire = Expire} = State) ->
+action(Req, #q{key = Key, cas = CAS, expire = Expire, extra = Extra} = State) ->
   Action = cowboy_req:method(Req),
   case Action of
     <<"GET">> ->
       case find(Key) of
-        {ok, Value} ->
-          {Value, Req, State};
+        {ok, {Value, CAS1, Expire1}} ->
+          if
+            Extra =:= cas -> {eutils:to_binary(CAS1), Req, State};
+            Extra =:= expire -> {eutils:to_binary(Expire1), Req, State};
+            true -> {Value, Req, State}
+          end;
         not_found ->
           {stop, cowboy_req:reply(404, Req), State}
       end;
@@ -94,9 +103,9 @@ action(Req, #q{key = Key, cas = CAS, expire = Expire} = State) ->
 find(Key) ->
   Policy = mixr_config:search_policy(),
   case mixr_op_get:find(Policy, Key) of
-    {_, {Key, Value, _, _, _}} = Data ->
+    {_, {Key, Value, CAS, Expiration, _Flags}} = Data ->
       _ = mixr_op_get:save_if_needed(Policy, Data),
-      {ok, Value};
+      {ok, {Value, CAS, Expiration}};
     _ ->
       not_found
   end.
