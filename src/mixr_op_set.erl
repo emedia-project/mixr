@@ -1,15 +1,15 @@
 -module(mixr_op_set).
--include("../include/mixr.hrl"). 
+-include("../include/mixr.hrl").
 
 -export([action/2]).
 
-action(#request_header{magic = ?REQUEST, 
-                       opcode = Opcode, 
-                       key_length = KeyLength, 
-                       extra_length = ExtraLength, 
-                       body_length = BodyLength, 
+action(#request_header{magic = ?REQUEST,
+                       opcode = Opcode,
+                       key_length = KeyLength,
+                       extra_length = ExtraLength,
+                       body_length = BodyLength,
                        opaque = Opaque,
-                       cas = CAS}, 
+                       cas = CAS},
        <<Flags:32, Expiration:32, Body/binary>> = Body1) ->
   if
     size(Body1) =:= BodyLength andalso ExtraLength =:= 8 ->
@@ -17,10 +17,10 @@ action(#request_header{magic = ?REQUEST,
       <<Key:KeyLength/binary, Value:ValueSize/binary>> = Body,
       lager:info("[SET/~p] ~p = ~p", [Opcode, Key, Value]),
       case set_data(mixr_store:exist(Key, CAS), Opcode) of
-        false -> 
+        false ->
           mixr_operation:error_response(Opcode, ?STATUS_KEY_EXISTS, Opaque);
-        true -> 
-          NewCAS = cas(CAS),
+        true ->
+          NewCAS = mixr_utils:cas(CAS),
           case mixr_store:save(Key, Value, NewCAS, Expiration, Flags) of
             error ->
               mixr_operation:error_response(Opcode, ?STATUS_INTERNAL_ERROR, Opaque);
@@ -43,7 +43,3 @@ set_data(true, ?OP_REPLACEQ) -> true;
 set_data(false, ?OP_ADDQ) -> true;
 set_data(_, _) -> false.
 
-cas(0) ->
-  {Mega,Sec,Micro} = erlang:now(),
-  (Mega*1000000+Sec)*1000000+Micro;
-cas(CAS) -> CAS.

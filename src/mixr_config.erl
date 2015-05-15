@@ -13,6 +13,7 @@
          , auto_discover/0
          , store/0
          , search_policy/0
+         , rest/0
          , server_ip/0
          , version/0
         ]).
@@ -37,6 +38,7 @@ start_link() ->
 ?ACCESSOR(auto_discover).
 ?ACCESSOR(store).
 ?ACCESSOR(search_policy).
+?ACCESSOR(rest).
 
 server_ip() ->
   case ip() of
@@ -56,14 +58,15 @@ version() ->
 
 init(_Args) ->
   try
-    {ok, lists:foldl(fun({Key, Value}, Acc) -> 
+    {ok, lists:foldl(fun({Key, Value}, Acc) ->
                          maps:put(Key, Value, Acc)
-                     end, 
+                     end,
                      #{ip => undefined,
                        port => 11212,
                        auto_discover => [{enable, false}],
                        search_policy => local,
-                       store => mixr_mem_store}, 
+                       store => mixr_mem_store,
+                       rest => [{enable, false}]},
                      application:get_all_env(mixr))}
   catch
     error:E -> {stop, E}

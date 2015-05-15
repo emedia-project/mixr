@@ -1,7 +1,8 @@
 -module(mixr_mem_store).
 
 -export([
-         init/0
+         init/1
+         , terminate/1
          , count/1
          , exist/3
          , save/6
@@ -18,8 +19,11 @@
           expiration,
           flag}).
 
-init() ->
+init(_) ->
   [].
+
+terminate(_) ->
+  ok.
 
 count(State) ->
   {length(State), State}.
@@ -35,7 +39,7 @@ exist(State, Key, CAS) ->
         _ ->
           {false, remove(State, Key)}
       end;
-    _ -> 
+    _ ->
       {false, State}
   end.
 
@@ -69,8 +73,8 @@ save(State, Key, Value, CAS, Expiration, Flags) ->
 
 find(State, Key) ->
   case lookup(State, Key) of
-    {{ok, 
-      #r{key = Key, value = Value, cas = CAS, expiration = Expiration, flag = Flags}}, 
+    {{ok,
+      #r{key = Key, value = Value, cas = CAS, expiration = Expiration, flag = Flags}},
      State1} ->
       {{ok, {Key, Value, CAS, expiration(Expiration), Flags}}, State1};
     Other ->
@@ -122,15 +126,15 @@ expiration(Date) ->
 
 xpend(State, Key, Value, Fun) ->
   case lookup(State, Key) of
-    {{ok, 
-      #r{key = Key, value = CurrentValue, cas = CAS, flag = 0} = Data}, 
+    {{ok,
+      #r{key = Key, value = CurrentValue, cas = CAS, flag = 0} = Data},
      State1} ->
-      {{ok, CAS}, 
+      {{ok, CAS},
        lists:keyreplace(
-         Key, 1, State1, 
+         Key, 1, State1,
          {Key, Data#r{value = Fun(CurrentValue, Value)}})};
-    {{ok, 
-      #r{cas = CAS}}, 
+    {{ok,
+      #r{cas = CAS}},
      State1} ->
       {{ok, CAS}, State1};
     Other ->

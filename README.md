@@ -4,9 +4,12 @@ memcached rewriten in pure Erlang
 
 # Support
 
-This version, only support the [binary protocol](https://code.google.com/p/memcached/wiki/BinaryProtocolRevamped).
+This version, support :
 
-## Commands
+* the [binary protocol](https://code.google.com/p/memcached/wiki/BinaryProtocolRevamped).
+* a custom REST API.
+
+## Memcached commands supported :
 
 * SET
 * ADD
@@ -24,4 +27,16 @@ This version, only support the [binary protocol](https://code.google.com/p/memca
 * APPENDQ
 * PREPEND
 * PREPENDQ
+
+## REST API :
+
+**GET /count**
+
+**GET /d/:key**
+
+**POST /d/:key[/expire/:seconds]**
+
+**PUT /d/:key/cas/:cas[/expire/:expire]**
+
+**DELETE /d/:key/cas/:cas**
 

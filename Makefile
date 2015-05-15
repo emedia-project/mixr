@@ -1,5 +1,6 @@
 REBAR = ./rebar
 XREL  = ./xrel
+RM_RF = rm -rf
 
 .PHONY: compile get-deps test
 
@@ -21,6 +22,13 @@ clean:
 
 realclean: clean
 	@$(REBAR) delete-deps
+	@$(RM_RF) ebin
+	@$(RM_RF) deps
+
+doc: compile
+	@rm -f documentation.md
+	@rm -rf doc
+	@$(REBAR) doc
 
 test: compile
 	@$(REBAR) skip_deps=true eunit
@@ -28,11 +36,3 @@ test: compile
 dev: compile
 	@erl -pa ebin include deps/*/ebin deps/*/include -config config/mixr.config -args_file config/vm.args
 
-analyze: checkplt
-	@$(REBAR) skip_deps=true dialyze
-
-buildplt:
-	@$(REBAR) skip_deps=true build-plt
-
-checkplt: buildplt
-	@$(REBAR) skip_deps=true check-plt

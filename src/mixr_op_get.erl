@@ -1,16 +1,17 @@
 -module(mixr_op_get).
--include("../include/mixr.hrl"). 
+-include("../include/mixr.hrl").
 
 -export([action/3]).
+-export([find/2, save_if_needed/2]).
 
-action(Policy, #request_header{magic = ?REQUEST, 
-                              opcode = Opcode, 
-                              key_length = KeyLength, 
-                              extra_length = 0, 
-                              body_length = BodyLength, 
+action(Policy, #request_header{magic = ?REQUEST,
+                              opcode = Opcode,
+                              key_length = KeyLength,
+                              extra_length = 0,
+                              body_length = BodyLength,
                               opaque = Opaque,
                               cas = 0}, Key) ->
-  if 
+  if
     size(Key) =:= BodyLength andalso KeyLength =:= BodyLength ->
       lager:info("[GET/~p] ~p", [Opcode, Key]),
       case find(Policy, Key) of
@@ -53,14 +54,14 @@ do_find(Policy, Key, [Node|Rest], not_found) ->
   do_find(Policy, Key, Rest, rpc:call(Node, mixr_store, find, [Key]));
 do_find(Policy, Key, [Node|Rest], {_, {_, _, CAS, _, _}} = Current) ->
   case rpc:call(Node, mixr_store, find, [Key]) of
-    {ok, {_, _, CAS1, _, _}} = Result -> 
+    {ok, {_, _, CAS1, _, _}} = Result ->
       case {CAS1 > CAS, Policy} of
         R when R =:= {true, higher_cas}; R =:= {false, lower_cas} ->
           do_find(Policy, Key, Rest, Result);
         _ ->
           do_find(Policy, Key, Rest, Current)
       end;
-    _ -> 
+    _ ->
       do_find(Policy, Key, Rest, Current)
   end.
 

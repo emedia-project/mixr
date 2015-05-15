@@ -52,10 +52,12 @@ prepend(Key, Value) ->
 module() ->
   gen_server:call(?SERVER, module).
 
-%% -- Gen server 
+%% -- Gen server
 
+init([{StoreModule, Option}]) ->
+  {ok, #storage{module = StoreModule, state = StoreModule:init(Option)}};
 init([StoreModule]) ->
-  {ok, #storage{module = StoreModule, state = StoreModule:init()}}.
+  init([{StoreModule, []}]).
 
 handle_call(module, _, #storage{module = Module} = State) ->
   {reply, Module, State};
@@ -69,8 +71,8 @@ handle_cast(_Msg, State) ->
 handle_info(_Info, State) ->
   {noreply, State}.
 
-terminate(_Reason, _State) ->
-  ok.
+terminate(_Reason, #storage{module = StoreModule, state = StorageState}) ->
+  StoreModule:terminate(StorageState).
 
 code_change(_OldVsn, State, _Extra) ->
   {ok, State}.

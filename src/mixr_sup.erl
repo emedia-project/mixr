@@ -12,14 +12,15 @@ start_link() ->
   supervisor:start_link({local, ?MODULE}, ?MODULE, []).
 
 init([]) ->
-    {ok, { 
-       {one_for_one, 5, 10}, 
+    {ok, {
+       {one_for_one, 5, 10},
        [
         ?CHILD(mixr_config, worker, 5000),
         ?CHILD(mixr_store, worker, 5000),
         ?CHILD(mixr_server_sup, supervisor, infinity),
+        ?CHILD(mixr_rest, worker, 5000),
         ?CHILD(mixr_discover, worker, 5000)
        ]
-      } 
+      }
     }.
 
