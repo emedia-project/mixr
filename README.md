@@ -61,8 +61,7 @@ Parameters :
 
 ## TODO
 
-* LeoFS Storage
-* AWS Storage
+* S3 Storage
 * SQL storage
 * Redis Storage
 
