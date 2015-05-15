@@ -42,7 +42,7 @@ resource_exists(Req, _State) ->
                        end,
                  expire = case cowboy_req:binding(expire, Req) of
                             undefined -> 0;
-                            Expiration -> edate:add(edate:today(), eutils:to_integer(Expiration), seconds)
+                            Expiration -> eutils:to_integer(Expiration)
                           end}}.
 
 delete_resource(Req, #q{key = Key, cas = CAS} = State) ->
