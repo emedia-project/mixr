@@ -45,12 +45,20 @@ This version, support :
 
 #### `mixr_ets_store`
 
-Store data on an ETS file
+Store data in an ETS file
 
 Parameters :
 
 * `file` :: `string()` : Name of the ETS file (default: `~/.data-<node()>.mixr`)
 * `tid` :: `atom()` : Name of the ETS file (default: `mixr`)
+
+#### `mixr_mnesia_store`
+
+Store data in mnesia
+
+Parameters :
+
+* `path` :: `string()` : Mnesia data path (default: `~/.mixr-<node()>`)
 
 ### Auto discover
 
