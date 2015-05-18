@@ -60,6 +60,20 @@ Parameters :
 
 * `path` :: `string()` : Mnesia data path (default: `~/.mixr-<node()>`)
 
+#### `mixr_redis_store`
+
+Store data in Redis
+
+Parameters :
+
+* `host` :: `string()` : Redis hostname (default: `localhost`)
+* `port` :: `integer()` : Redis port (default: `6379`)
+* `database` :: `integer()` : Redis database (default: `0`)
+* `password` :: `string()` : Redis password (default: none)
+* `reconnect_sleep` :: `integer()` : Redis reconnect (default: `100`)
+* `timeout` :: `integer()` : Redis timeout (default: `3000`)
+* `namespace` :: `string()` : Mixr keys namespace (default: `mixr`)
+
 ### Auto discover
 
 % TODO
