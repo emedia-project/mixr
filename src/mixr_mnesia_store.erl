@@ -169,9 +169,8 @@ open(#s{path = Path} = State) ->
   case Schema of
     ok ->
       lager:info("Create schema."),
-      X = mnesia:create_table(r,
+      _ = mnesia:create_table(r,
                           [{disc_copies, [node()]}, {attributes, record_info(fields, r)}]),
-      lager:info("==> ~p", [X]),
       created;
     {error,{_,{already_exists,_}}} ->
       lager:info("Schema already exist."),
