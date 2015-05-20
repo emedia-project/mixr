@@ -1,17 +1,8 @@
 {application, mixr,
- [
-  {description, ""},
-  {vsn, "1.0.0-pre"},
+ [{description, []},
+  {vsn, "1.0.0"},
   {registered, []},
-  {applications, [
-                  kernel,
-                  stdlib,
-                  crypto,
-                  syntax_tools,
-                  compiler,
-                  goldrush,
-                  lager
-                 ]},
-  {mod, { mixr_app, []}},
-  {env, []}
- ]}.
+  {applications, [kernel, stdlib, crypto, syntax_tools, compiler, goldrush, lager]},
+  {mod,
+   {mixr_app, []}},
+  {env, []}]}.
