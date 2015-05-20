@@ -25,7 +25,7 @@ init(_) ->
       _ = application:ensure_all_started(cowboy),
       Port = elists:keyfind(port, 1, Rest, ?DEFAULT_REST_PORT),
       Dispatch = cowboy_router:compile([{'_', [
-                                               {"/d/:key/cas/:cas", mixr_rest_handler, []},
+                                               {"/d/:key/cas/:cas[/:extra]", mixr_rest_handler, []},
                                                {"/d/:key/expire/:expire", mixr_rest_handler, []},
                                                {"/d/:key[/:extra]", mixr_rest_handler, []},
                                                {"/count", mixr_rest_count_handler, []}

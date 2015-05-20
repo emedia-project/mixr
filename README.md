@@ -96,13 +96,16 @@ Parameters :
 
 **PUT /d/:key/cas/:cas**
 
+**PUT /d/:key/cas/:cas/append**
+
+**PUT /d/:key/cas/:cas/prepend**
+
 **DELETE /d/:key/cas/:cas**
 
 ## TODO
 
 * S3 Storage
 * SQL storage
-* Redis Storage
 
 ## Licence
 

@@ -121,11 +121,19 @@ body(Req, Data) ->
       body(Req2, <<Data/binary, New/binary>>)
   end.
 
-store(Req, Key, Expire, CAS, State) ->
+store(Req, Key, Expire, CAS, #q{extra = Extra} = State) ->
   {Req2, Data} = body(Req),
-  case mixr_store:save(Key, Data, mixr_utils:cas(CAS), Expire, 0) of
+  case if
+         Extra =:= append ->
+           mixr_store:append(Key, Data);
+         Extra =:= prepend ->
+           mixr_store:prepend(Key, Data);
+         true ->
+           mixr_store:save(Key, Data, mixr_utils:cas(CAS), Expire, 0)
+       end of
     {ok, CAS1} ->
       {true, cowboy_req:set_resp_body(eutils:to_binary(CAS1), Req2), State};
     _ ->
       {stop, cowboy_req:reply(500, Req2), State}
   end.
+
