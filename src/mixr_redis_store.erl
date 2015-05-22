@@ -1,4 +1,5 @@
 -module(mixr_redis_store).
+-behaviour(mixr_backend_store).
 
 -export([
          init/1
