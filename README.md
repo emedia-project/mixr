@@ -102,6 +102,10 @@ Parameters :
 
 **DELETE /d/:key/cas/:cas**
 
+## Plugins
+
+* [`mixr_freegeoip`](https://github.com/emedia-project/mixr_freegeoip) : This plugin allow you to retrieve IP informations via [freegeoip.net](http://freegeoip.net)
+
 ## TODO
 
 * S3 Storage

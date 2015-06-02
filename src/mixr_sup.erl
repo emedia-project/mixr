@@ -19,7 +19,8 @@ init([]) ->
         ?CHILD(mixr_store, worker, 5000),
         ?CHILD(mixr_server_sup, supervisor, infinity),
         ?CHILD(mixr_rest, worker, 5000),
-        ?CHILD(mixr_discover, worker, 5000)
+        ?CHILD(mixr_discover, worker, 5000),
+        ?CHILD(mixr_plugins, worker, 5000)
        ]
       }
     }.

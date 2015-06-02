@@ -14,6 +14,7 @@
          , store/0
          , search_policy/0
          , rest/0
+         , plugins/0
          , server_ip/0
          , version/0
         ]).
@@ -39,6 +40,7 @@ start_link() ->
 ?ACCESSOR(store).
 ?ACCESSOR(search_policy).
 ?ACCESSOR(rest).
+?ACCESSOR(plugins).
 
 server_ip() ->
   case ip() of

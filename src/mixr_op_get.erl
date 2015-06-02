@@ -46,7 +46,12 @@ find(local, Key) ->
     _ -> not_found
   end;
 find(Policy, Key) ->
-  do_find(Policy, Key, mixr_discover:servers_nodes(), find(local, Key)).
+  case do_find(Policy, Key, mixr_discover:servers_nodes(), find(local, Key)) of
+    not_found ->
+      mixr_plugins:find(Key);
+    Result ->
+      Result
+  end.
 
 do_find(_, _, [], Result) -> Result;
 do_find(first, _, _, Result) when Result =/= not_found -> Result;
