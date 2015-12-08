@@ -12,5 +12,5 @@ dep_mixr_freegeoip = git https://github.com/emedia-project/mixr_freegeoip.git ma
 include erlang.mk
 
 dev: deps app
-	@erl -pa ebin include deps/*/ebin deps/*/include
+	@erl -pa ebin include deps/*/ebin deps/*/include -config config/mixr.config
 

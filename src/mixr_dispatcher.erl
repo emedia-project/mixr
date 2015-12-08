@@ -1,4 +1,5 @@
 -module(mixr_dispatcher).
+-compile([{parse_transform, lager_transform}]).
 -include("../include/mixr.hrl"). 
 
 -export([handle_data/3, handle_accept/2, handle_close/2]).

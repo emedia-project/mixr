@@ -6,6 +6,7 @@
 
 -module(mixr_discover).
 -behaviour(gen_server).
+-compile([{parse_transform, lager_transform}]).
 -export([start_link/0, discover/0, server_addr/0, servers_addrs/0, servers_nodes/0]).
 -export([init/1,
          handle_call/3,

@@ -1,4 +1,5 @@
 -module(mixr_op_set).
+-compile([{parse_transform, lager_transform}]).
 -include("../include/mixr.hrl").
 
 -export([action/2]).

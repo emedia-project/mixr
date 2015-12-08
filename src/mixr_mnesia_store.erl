@@ -1,5 +1,6 @@
 -module(mixr_mnesia_store).
 -behaviour(mixr_backend_store).
+-compile([{parse_transform, lager_transform}]).
 -include_lib("stdlib/include/qlc.hrl").
 
 -export([
