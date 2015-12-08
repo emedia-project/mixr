@@ -21,7 +21,7 @@
          }).
 
 init(Req, Opts) ->
-  random:seed(now()),
+  random:seed(erlang:system_time(milli_seconds)),
   {cowboy_rest, Req, Opts}.
 
 allowed_methods(Req, State) ->

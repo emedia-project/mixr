@@ -1,38 +1,16 @@
-REBAR = ./rebar
-XREL  = ./xrel
-RM_RF = rm -rf
+PROJECT = mixr
 
-.PHONY: compile get-deps test
+DEPS = lager eutils cowboy eredis mixr_freegeoip 
 
-all: compile
+dep_lager = git https://github.com/basho/lager.git master
+dep_eutils = git https://github.com/emedia-project/eutils.git master
+dep_cowboy = git https://github.com/ninenines/cowboy.git master
+dep_eredis = git https://github.com/wooga/eredis.git master
+# mixr-plugins
+dep_mixr_freegeoip = git https://github.com/emedia-project/mixr_freegeoip.git master
 
-release: compile
-	@$(XREL) tar
+include erlang.mk
 
-compile: get-deps
-	@$(REBAR) compile
-
-get-deps:
-	@$(REBAR) get-deps
-	@$(REBAR) check-deps
-
-clean:
-	@$(REBAR) clean
-	rm -f erl_crash.dump
-
-realclean: clean
-	@$(REBAR) delete-deps
-	@$(RM_RF) ebin
-	@$(RM_RF) deps
-
-doc: compile
-	@rm -f documentation.md
-	@rm -rf doc
-	@$(REBAR) doc
-
-test: compile
-	@$(REBAR) skip_deps=true eunit
-
-dev: compile
-	@erl -pa ebin include deps/*/ebin deps/*/include -config config/mixr.config -args_file config/vm.args
+dev: deps app
+	@erl -pa ebin include deps/*/ebin deps/*/include
 

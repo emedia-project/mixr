@@ -2,7 +2,7 @@
  [{description, []},
   {vsn, "1.0.1-pre"},
   {registered, []},
+  {modules, []},
   {applications, [kernel, stdlib, crypto, syntax_tools, compiler, goldrush, lager]},
-  {mod,
-   {mixr_app, []}},
+  {mod, {mixr_app, []}},
   {env, []}]}.
