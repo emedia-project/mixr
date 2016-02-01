@@ -1,3 +1,4 @@
+% @hidden
 -module(mixr_operation).
 -include("../include/mixr.hrl"). 
 

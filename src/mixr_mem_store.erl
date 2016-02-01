@@ -1,3 +1,4 @@
+% @hidden
 -module(mixr_mem_store).
 -behaviour(mixr_backend_store).
 

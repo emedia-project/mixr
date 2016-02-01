@@ -1,3 +1,4 @@
+% @hidden
 -module(mixr_server_sup).
 
 -behaviour(supervisor).

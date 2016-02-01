@@ -1,3 +1,4 @@
+% @hidden
 -module(mixr_rest_handler).
 
 -export([

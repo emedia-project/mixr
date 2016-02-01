@@ -1,8 +1,4 @@
-%% @doc Multicast Erlang node discovery protocol.
-%% Listens on a multicast channel for node discovery requests and 
-%% responds by connecting to the node.
-%% @hidden
-%% @end
+% @hidden
 
 -module(mixr_discover).
 -behaviour(gen_server).

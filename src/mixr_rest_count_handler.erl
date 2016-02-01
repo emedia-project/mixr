@@ -1,3 +1,4 @@
+% @hidden
 -module(mixr_rest_count_handler).
 
 -export([init/2]).

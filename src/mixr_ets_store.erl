@@ -1,3 +1,4 @@
+% @hidden
 -module(mixr_ets_store).
 -behaviour(mixr_backend_store).
 

@@ -1,3 +1,4 @@
+% @hidden
 -module(mixr_store).
 -behaviour(gen_server).
 -define(SERVER, ?MODULE).

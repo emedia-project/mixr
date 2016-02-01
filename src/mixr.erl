@@ -1,3 +1,4 @@
+% @hidden
 -module(mixr).
 
 -export([start/0]).

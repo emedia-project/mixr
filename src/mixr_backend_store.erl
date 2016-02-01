@@ -1,3 +1,4 @@
+% @hidden
 -module(mixr_backend_store).
 
 -type state() :: any().

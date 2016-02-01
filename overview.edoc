@@ -1,0 +1,151 @@
+@author Gregoire Lejeune <gregoire.lejeune@free.fr>
+@copyright 2015, 2016 G-Corp
+@version 1.0.0
+@title Memcached rewriten in pure Erlang
+@doc
+<h2>Mixr</h2>
+
+memcached rewriten in pure Erlang
+
+<h2>Support</h2>
+
+This version, support :
+
+<ul>
+<li> The <a href="https://code.google.com/p/memcached/wiki/BinaryProtocolRevamped">binary protocol</a>.</li>
+<li> A custom REST API.</li>
+</ul>
+
+<h3>Memcached commands supported</h3>
+
+<ul>
+<li><tt>SET</tt></li>
+<li><tt>ADD</tt></li>
+<li><tt>REPLACE</tt></li>
+<li><tt>SETQ</tt></li>
+<li><tt>ADDQ</tt></li>
+<li><tt>REPLACEQ</tt></li>
+<li><tt>GET</tt></li>
+<li><tt>GETQ</tt></li>
+<li><tt>GETK</tt></li>
+<li><tt>GETKQ</tt></li>
+<li><tt>DELETE</tt></li>
+<li><tt>DELETEQ</tt></li>
+<li><tt>APPEND</tt></li>
+<li><tt>APPENDQ</tt></li>
+<li><tt>PREPEND</tt></li>
+<li><tt>PREPENDQ</tt></li>
+</ul>
+
+<h2>Configuration</h2>
+
+<ul>
+<li><tt>ip</tt> :: <tt>string() | undefined</tt></li>
+<li><tt>port</tt> :: <tt>integer() &gt;= 1, &lt;= 65535</tt></li>
+<li><tt>store</tt> :: <tt>atom() | tuple()</tt> : see below</li>
+<li><tt>search_policy</tt> :: <tt>first | first_s | higher_cas | higher_cas_s | lower_cas | lower_cas_s | local</tt></li>
+<li><tt>auto_discover</tt> :: <tt>list()</tt></li>
+<li><tt>rest</tt> :: <tt>list()</tt></li>
+</ul>
+
+<h2>Store</h2>
+
+<h3>mixr_mem_store</h3>
+
+"On memory" storage
+
+<h3>mixr_ets_store</h3>
+
+Store data in an ETS file
+
+Parameters :
+
+<ul>
+<li><tt>file</tt> :: <tt>string()</tt> : Name of the ETS file (default: <tt>~/.data-&lt;node()&gt;.mixr</tt>)</li>
+<li><tt>tid</tt> :: <tt>atom()</tt> : Name of the ETS file (default: <tt>mixr</tt>)</li>
+</ul>
+
+<h3>mixr_mnesia_store</h3>
+
+Store data in mnesia
+
+Parameters :
+
+<ul>
+<li><tt>path</tt> :: <tt>string()</tt> : Mnesia data path (default: <tt>~/.mixr-&lt;node()&gt;</tt>)</li>
+</ul>
+
+<h3>mixr_redis_store</h3>
+
+Store data in Redis
+
+Parameters :
+
+<ul>
+<li><tt>host</tt> :: <tt>string()</tt> : Redis hostname (default: <tt>localhost</tt>)</li>
+<li><tt>port</tt> :: <tt>integer()</tt> : Redis port (default: <tt>6379</tt>)</li>
+<li><tt>database</tt> :: <tt>integer()</tt> : Redis database (default: <tt>0</tt>)</li>
+<li><tt>password</tt> :: <tt>string()</tt> : Redis password (default: none)</li>
+<li><tt>reconnect_sleep</tt> :: <tt>integer()</tt> : Redis reconnect (default: <tt>100</tt>)</li>
+<li><tt>timeout</tt> :: <tt>integer()</tt> : Redis timeout (default: <tt>3000</tt>)</li>
+<li><tt>namespace</tt> :: <tt>string()</tt> : Mixr keys namespace (default: <tt>mixr</tt>)</li>
+</ul>
+
+<h2>Auto discover</h2>
+
+% TODO
+
+<h2>REST</h2>
+
+% TODO
+
+<h3>API</h3>
+
+<tt>GET /count</tt>
+
+<tt>GET /d/:key</tt>
+
+<tt>GET /d/:key/cas</tt>
+
+<tt>GET /d/:key/expire</tt>
+
+<tt>POST /d/:key[/expire/:seconds]</tt>
+
+<tt>PUT /d/:key/cas/:cas</tt>
+
+<tt>PUT /d/:key/cas/:cas/append</tt>
+
+<tt>PUT /d/:key/cas/:cas/prepend</tt>
+
+<tt>DELETE /d/:key/cas/:cas</tt>
+
+<h2>Plugins</h2>
+
+<ul>
+<li><a href="https://github.com/emedia-project/mixr_freegeoip"><tt>mixr_freegeoip</tt></a> : This plugin allow you to retrieve IP informations via <a href="http://freegeoip.net">freegeoip.net</a></li>
+</ul>
+
+<h2>TODO</h2>
+
+<ul>
+<li>S3 Storage</li>
+<li>SQL storage</li>
+</ul>
+
+<h2>Licence</h2>
+
+<p>Mixr is available for use under the following license, commonly known as the 3-clause (or "modified") BSD license:</p>
+
+<p>Copyright (c) 2014 Grégoire Lejeune<br />
+Copyright (c) 2015, 2016 G-Corp</p>
+
+<p>Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:</p>
+
+<ol>
+<li>Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.</li>
+<li>Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.</li>
+<li>The name of the author may not be used to endorse or promote products derived from this software without specific prior written permission.</li>
+</ol>
+
+<p>THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</p>
+@end

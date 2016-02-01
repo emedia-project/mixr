@@ -1,3 +1,4 @@
+% @hidden
 -module(mixr_config).
 -behaviour(gen_server).
 -define(SERVER, ?MODULE).

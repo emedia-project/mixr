@@ -1,3 +1,4 @@
+% @hidden
 -module(mixr_app).
 
 -behaviour(application).

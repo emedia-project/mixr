@@ -1,3 +1,4 @@
+% @hidden
 -module(mixr_op_get).
 -compile([{parse_transform, lager_transform}]).
 -include("../include/mixr.hrl").

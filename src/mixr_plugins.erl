@@ -1,3 +1,4 @@
+% @hidden
 -module(mixr_plugins).
 -behaviour(gen_server).
 -compile([{parse_transform, lager_transform}]).
