@@ -28,5 +28,5 @@ EDOC_OPTS = {doclet, edown_doclet} \
 EUNIT_OPTS = verbose, {report, {eunit_surefire, [{dir, "test"}]}}
 
 dev: deps app
-	@erl -pa ebin include deps/*/ebin deps/*/include -config config/mixr.config
+	@erl -pa ebin include deps/*/ebin deps/*/include -config config/mixr.config -setcookie mixr -name mixr1@127.0.0.1
 
