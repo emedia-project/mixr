@@ -10,5 +10,5 @@ _xrel
 *.d
 .erlang.mk
 *.swp
-_jorel
+_jorel*
 .jorel

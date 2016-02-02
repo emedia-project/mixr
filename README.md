@@ -166,6 +166,21 @@ Parameters :
 
 
 
+## Dockerize ##
+
+If you want to dockerize __Mixr__, first, update `Makefile`, `jorel.prod.config` and `config/mixr.prod.config`. Then run :
+
+```
+make jorel.exec cmd=dockerize c=jorel.prod.config
+```
+
+You now have a __Mixr__ image; so,you can start your container :
+
+```
+docker run -d -v $(pwd)/data:/data -p 11212:11212 mixr:1.0.1-pre
+```
+
+
 ## TODO ##
 
 * S3 Storage

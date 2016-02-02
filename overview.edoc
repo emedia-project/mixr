@@ -125,6 +125,16 @@ Parameters :
 <li><a href="https://github.com/emedia-project/mixr_freegeoip"><tt>mixr_freegeoip</tt></a> : This plugin allow you to retrieve IP informations via <a href="http://freegeoip.net">freegeoip.net</a></li>
 </ul>
 
+<h2>Dockerize</h2>
+
+If you want to dockerize <b>Mixr</b>, first, update <tt>Makefile</tt>, <tt>jorel.prod.config</tt> and <tt>config/mixr.prod.config</tt>. Then run :
+
+<pre>make jorel.exec cmd=dockerize c=jorel.prod.config</pre>
+
+You now have a <b>Mixr</b> image; so,you can start your container :
+
+<pre>docker run -d -v $(pwd)/data:/data -p 11212:11212 mixr:1.0.1-pre</pre>
+
 <h2>TODO</h2>
 
 <ul>
