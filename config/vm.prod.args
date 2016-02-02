@@ -1,0 +1,3 @@
+-name ${MIXR_VM_NAME}
+
+-setcookie mixr
