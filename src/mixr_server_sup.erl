@@ -18,6 +18,7 @@ init([]) ->
   IP = mixr_config:ip(),
   Port = mixr_config:port(),
   BasicSockOpts = [binary,
+                   {packet, raw},
                    {active, false},
                    {reuseaddr, true}],
   SockOpts = case IP of
