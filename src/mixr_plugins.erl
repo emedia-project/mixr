@@ -39,8 +39,8 @@ find(Key) ->
 init(_) ->
   {ok, lists:foldl(fun(Plugin, Acc) ->
                        {Name, Options} = case Plugin of
-                                           {N, O} -> {eutils:to_atom(N), O};
-                                           N -> {eutils:to_atom(N), []}
+                                           {N, O} -> {bucs:to_atom(N), O};
+                                           N -> {bucs:to_atom(N), []}
                                          end,
                        case erlang:apply(Name, start, [Options]) of
                          {ok, State1} ->
@@ -53,7 +53,7 @@ init(_) ->
                    end, #{}, mixr_config:plugins())}.
 
 handle_call({find, Plugin, Key}, _From, State) ->
-  case maps:get(eutils:to_atom(Plugin), State, '**undefined**') of
+  case maps:get(bucs:to_atom(Plugin), State, '**undefined**') of
     '**undefined**' ->
       {reply, not_found, State};
     Options ->
@@ -98,7 +98,7 @@ call(Key, [{Plugin, Options}|Rest]) ->
 
 call(Plugin, Key, Options) ->
   lager:info("Call ~p for key ~s", [Plugin, Key]),
-  case erlang:apply(eutils:to_atom(Plugin), find, [Key, Options]) of
+  case erlang:apply(bucs:to_atom(Plugin), find, [Key, Options]) of
     {ok, {Key1, Value1, CAS, Expire, Flags}} ->
       {ok, {Key1, Value1, mixr_utils:cas(CAS), Expire, Flags}};
     _ ->

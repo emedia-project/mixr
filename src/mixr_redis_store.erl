@@ -29,14 +29,14 @@
 init(Args) ->
   lager:info("Start redis store"),
   case eredis:start_link(
-         elists:keyfind(host, 1, Args, "localhost"),
-         elists:keyfind(port, 1, Args, 6379),
-         elists:keyfind(database, 1, Args, 0),
-         elists:keyfind(password, 1, Args, ""),
-         elists:keyfind(reconnect_sleep, 1, Args, 100),
-         elists:keyfind(timeout, 1, Args, 5000)) of
+         buclists:keyfind(host, 1, Args, "localhost"),
+         buclists:keyfind(port, 1, Args, 6379),
+         buclists:keyfind(database, 1, Args, 0),
+         buclists:keyfind(password, 1, Args, ""),
+         buclists:keyfind(reconnect_sleep, 1, Args, 100),
+         buclists:keyfind(timeout, 1, Args, 5000)) of
     {ok, C} ->
-      #s{connection = C, namespace = elists:keyfind(namespace, 1, Args, "mixr")};
+      #s{connection = C, namespace = buclists:keyfind(namespace, 1, Args, "mixr")};
     _ ->
       lager:info("Redis connection faild!"),
       connection_faild
@@ -76,7 +76,7 @@ save(#s{connection = C} = State, Key, Value, CAS, Expiration, Flags) ->
     {not_found, State1} ->
       case insert(State1, Record) of
         {{ok, _}, _} = Result ->
-          Exp = eutils:to_integer(Expiration),
+          Exp = bucs:to_integer(Expiration),
           _ = if
                 Exp > 0 ->
                   _ = eredis:q(C, ["EXPIRE", key(State1, Key), Exp]);
@@ -142,19 +142,19 @@ query_to_r({ok, Data}) ->
   query_to_r(Data, #r{});
 query_to_r(Data) when is_list(Data) ->
   query_to_r(Data, #r{}).
-query_to_r([], #r{cas = CAS, expiration = Exp, flag = Flag} = R) -> R#r{cas = eutils:to_integer(CAS),
-                                                                        expiration = eutils:to_integer(Exp),
-                                                                        flag = eutils:to_integer(Flag)};
+query_to_r([], #r{cas = CAS, expiration = Exp, flag = Flag} = R) -> R#r{cas = bucs:to_integer(CAS),
+                                                                        expiration = bucs:to_integer(Exp),
+                                                                        flag = bucs:to_integer(Flag)};
 query_to_r([Key, Value|Rest], R) ->
-  query_to_r(Rest, set_field(eutils:to_atom(Key), Value, R)).
+  query_to_r(Rest, set_field(bucs:to_atom(Key), Value, R)).
 
 r_to_query(R) when is_record(R, r) ->
   lists:foldl(fun({K, V}, Acc) ->
-                  [eutils:to_string(K), eutils:to_string(V) | Acc]
+                  [bucs:to_string(K), bucs:to_string(V) | Acc]
               end, [], lists:zip(record_info(fields, r), tl(tuple_to_list(R)))).
 
 key(#s{namespace = NS}, Key) ->
-  lists:flatten(eutils:to_string(NS) ++ ":" ++ eutils:to_string(Key)).
+  lists:flatten(bucs:to_string(NS) ++ ":" ++ bucs:to_string(Key)).
 
 search(#s{connection = C} = State, Key) ->
   case eredis:q(C, ["HGETALL", key(State, Key)]) of
@@ -191,7 +191,7 @@ insert(#s{connection = C} = State, #r{key = Key, cas = CAS} = Record) ->
 expiration(#s{connection = C} = State, Key) ->
   case eredis:q(C, ["TTL", key(State, Key)]) of
     {ok, Expiration} ->
-      case eutils:to_integer(Expiration) > 0 of
+      case bucs:to_integer(Expiration) > 0 of
         true -> Expiration;
         false -> "0"
       end;

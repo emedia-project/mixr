@@ -27,9 +27,9 @@ start_link() ->
       gen_server:start_link({local, ?MODULE}, 
                             ?MODULE, 
                             [
-                             elists:keyfind(addr, 1, AutoDiscover, {226, 0, 0, 1}),
-                             elists:keyfind(port, 1, AutoDiscover, 6996),
-                             elists:keyfind(multicast_ttl, 1, AutoDiscover, 1)
+                             buclists:keyfind(addr, 1, AutoDiscover, {226, 0, 0, 1}),
+                             buclists:keyfind(port, 1, AutoDiscover, 6996),
+                             buclists:keyfind(multicast_ttl, 1, AutoDiscover, 1)
                             ], []);
     _ ->
       ignore
@@ -39,15 +39,15 @@ discover() ->
   gen_server:call(?MODULE, discover).
 
 server_addr() ->
-  <<(mixr_config:server_ip())/binary, ":", (eutils:to_binary(mixr_config:port()))/binary>>.
+  <<(mixr_config:server_ip())/binary, ":", (bucs:to_binary(mixr_config:port()))/binary>>.
 
 servers_addrs() ->
-  ebinary:join(lists:foldl(fun(Node, Acc) ->
-                               case rpc:call(Node, mixr_discover, server_addr, []) of
-                                 {badrpc, _} -> Acc;
-                                 Res -> [Res|Acc]
-                               end
-                           end, [], erlang:nodes()), <<",">>).
+  bucbinary:join(lists:foldl(fun(Node, Acc) ->
+                                 case rpc:call(Node, mixr_discover, server_addr, []) of
+                                   {badrpc, _} -> Acc;
+                                   Res -> [Res|Acc]
+                                 end
+                             end, [], erlang:nodes()), <<",">>).
 
 servers_nodes() ->
   lists:foldl(fun(Node, Acc) ->
@@ -131,13 +131,17 @@ process_packet("DISCOVERV2 " ++ Rest, IP, InPortNo, State) ->
   % Falling a mac is not really worth logging, since having multiple
   % cookies on the network is one way to prevent crosstalk.  However
   % the packet should always have the right structure.
+  lager:info("Receive discover message"),
   try
     <<Mac:20/binary, " ", 
       Time:64, " ",
       NodeString/binary>> = list_to_binary(Rest),
     case {mac([<<Time:64>>, NodeString]), abs(seconds() - Time)} of
       {Mac, AbsDelta} when AbsDelta < 300 ->
-        net_adm:ping(list_to_atom(binary_to_list(NodeString)));
+        case net_adm:ping(list_to_atom(binary_to_list(NodeString))) of
+          pong -> lager:info("Register node ~s", [NodeString]);
+          _ -> lager:info("Faild to register node ~s", [NodeString])
+        end;
       {Mac, AbsDelta} ->
         lager:info("expired DISCOVERV2 (~p) from ~p:~p~n",
                    [AbsDelta,
@@ -147,11 +151,12 @@ process_packet("DISCOVERV2 " ++ Rest, IP, InPortNo, State) ->
         ok
     end
   catch
-    error : {badmatch, _} ->
-      lager:info("bad DISCOVERV2 from ~p:~p~n", 
+    E:R ->
+      lager:info("bad DISCOVERV2 from ~p:~p~n (~p:~p)", 
                  [list_to_binary(Rest),
                   IP,
-                  InPortNo])
+                  InPortNo,
+                  E, R])
   end,
   State;
 process_packet(_Packet, _IP, _InPortNo, State) -> 

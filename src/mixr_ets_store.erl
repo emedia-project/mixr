@@ -27,9 +27,9 @@
          }).
 
 init(Args) ->
-  File = elists:keyfind(file, 1, Args, filename:join([efile:user_home(),
-                                                      ".data-" ++ eutils:to_string(node()) ++ ".mixr"])),
-  Tid = elists:keyfind(tid, 1, Args, mixr),
+  File = buclists:keyfind(file, 1, Args, filename:join([bucbile:user_home(),
+                                                        ".data-" ++ bucs:to_string(node()) ++ ".mixr"])),
+  Tid = buclists:keyfind(tid, 1, Args, mixr),
   open(#s{file = File, tid = Tid}).
 
 terminate(State) ->
@@ -41,7 +41,7 @@ count(#s{tid = Tid} = State) ->
     undefined ->
       {0, State};
     InfoList ->
-      {elists:keyfind(size, 1, InfoList, 0), State}
+      {buclists:keyfind(size, 1, InfoList, 0), State}
   end.
 
 exist(#s{tid = Tid} = State, Key, CAS) ->
@@ -49,7 +49,7 @@ exist(#s{tid = Tid} = State, Key, CAS) ->
     [{Key, #r{cas = CAS1, expiration = 0}}] when CAS =:= 0; CAS1 =:= CAS ->
       {true, State};
     [{Key, #r{cas = CAS1, expiration = Expiration}}] when CAS =:= 0; CAS1 =:= CAS ->
-      case edate:compare(Expiration, edate:today()) of
+      case bucdate:compare(Expiration, bucdate:today()) of
         -1 ->
           {true, State};
         _ ->
@@ -62,7 +62,7 @@ exist(#s{tid = Tid} = State, Key, CAS) ->
 save(#s{tid = Tid} = State, Key, Value, CAS, Expiration, Flags) ->
   Expiration1 = if
                   Expiration =:= 0 -> 0;
-                  true -> edate:add(edate:today(), Expiration, seconds)
+                  true -> bucdate:add(bucdate:today(), Expiration, seconds)
                 end,
   Record = #r{
               key = Key,
@@ -137,7 +137,7 @@ remove(#s{tid = Tid} = State, Key) ->
 expiration(0) -> 0;
 expiration(Date) ->
   Expiration = calendar:datetime_to_gregorian_seconds(Date) -
-               calendar:datetime_to_gregorian_seconds(edate:today()),
+  calendar:datetime_to_gregorian_seconds(bucdate:today()),
   if
     Expiration > 0 -> Expiration;
     true -> 1
@@ -162,9 +162,9 @@ open(#s{file = File, tid = Tid} = State) ->
   case ets:file2tab(File) of
     {ok, Tid1} -> #s{file = File, tid = Tid1};
     {error, _} -> _ = ets:new(Tid, [set,
-                                 named_table,
-                                 {write_concurrency, true},
-                                 {read_concurrency, true}]),
+                                    named_table,
+                                    {write_concurrency, true},
+                                    {read_concurrency, true}]),
                   State
   end.
 

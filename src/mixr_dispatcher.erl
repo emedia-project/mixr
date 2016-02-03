@@ -28,11 +28,11 @@ handle_data(Sock, Data, State) ->
 
 handle_accept(Sock, State) ->
   {ok, {IP, Port}} = inet:peername(Sock),
-  lager:info("New client connected ~p:~p", [enet:ip_to_str(IP), Port]),
+  lager:info("New client connected ~p:~p", [bucinet:ip_to_string(IP), Port]),
   {ok, State}.
 
 handle_close(_Sock, _State) ->
-  io:format("sock close~n").
+  lager:info("sock close").
 
 parse_request_header(<<Magic, 
                Opcode, 

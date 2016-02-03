@@ -40,15 +40,15 @@ resource_exists(Req, _State) ->
   {true, Req, #q{key = cowboy_req:binding(key, Req),
                  cas = case cowboy_req:binding(cas, Req) of
                          undefined -> 0;
-                         CAS -> eutils:to_integer(CAS)
+                         CAS -> bucs:to_integer(CAS)
                        end,
                  expire = case cowboy_req:binding(expire, Req) of
                             undefined -> 0;
-                            Expiration -> eutils:to_integer(Expiration)
+                            Expiration -> bucs:to_integer(Expiration)
                           end,
                  extra = case cowboy_req:binding(extra, Req) of
                            undefined -> value;
-                           Extra -> eutils:to_atom(Extra)
+                           Extra -> bucs:to_atom(Extra)
                          end}}.
 
 delete_resource(Req, #q{key = Key, cas = CAS} = State) ->
@@ -71,8 +71,8 @@ action(Req, #q{key = Key, cas = CAS, expire = Expire, extra = Extra} = State) ->
       case find(Key) of
         {ok, {Value, CAS1, Expire1}} ->
           if
-            Extra =:= cas -> {eutils:to_binary(CAS1), Req, State};
-            Extra =:= expire -> {eutils:to_binary(Expire1), Req, State};
+            Extra =:= cas -> {bucs:to_binary(CAS1), Req, State};
+            Extra =:= expire -> {bucs:to_binary(Expire1), Req, State};
             true -> {Value, Req, State}
           end;
         not_found ->
@@ -133,7 +133,7 @@ store(Req, Key, Expire, CAS, #q{extra = Extra} = State) ->
            mixr_store:save(Key, Data, mixr_utils:cas(CAS), Expire, 0)
        end of
     {ok, CAS1} ->
-      {true, cowboy_req:set_resp_body(eutils:to_binary(CAS1), Req2), State};
+      {true, cowboy_req:set_resp_body(bucs:to_binary(CAS1), Req2), State};
     _ ->
       {stop, cowboy_req:reply(500, Req2), State}
   end.

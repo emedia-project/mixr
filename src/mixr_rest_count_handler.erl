@@ -10,4 +10,4 @@ init(Req, Opts) ->
 echo(Req) ->
   cowboy_req:reply(200, [
     {<<"content-type">>, <<"text/plain; charset=utf-8">>}
-  ], eutils:to_binary(mixr_store:count()), Req).
+  ], bucs:to_binary(mixr_store:count()), Req).

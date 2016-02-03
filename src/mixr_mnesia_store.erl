@@ -28,8 +28,8 @@
          }).
 
 init(Args) ->
-  Path = elists:keyfind(path, 1, Args, filename:join([efile:user_home(),
-                                                      ".mixr-" ++ eutils:to_string(node())])),
+  Path = buclists:keyfind(path, 1, Args, filename:join([bucbile:user_home(),
+                                                        ".mixr-" ++ bucs:to_string(node())])),
   open(#s{path = Path}).
 
 terminate(_State) ->
@@ -48,7 +48,7 @@ exist(State, Key, CAS) ->
     {ok, #r{cas = CAS1, expiration = 0}} when CAS =:= 0; CAS1 =:= CAS ->
       {true, State};
     {ok, #r{cas = CAS1, expiration = Expiration} = Data} when CAS =:= 0; CAS1 =:= CAS ->
-      case edate:compare(Expiration, edate:today()) of
+      case bucdate:compare(Expiration, bucdate:today()) of
         -1 ->
           {true, State};
         _ ->
@@ -62,7 +62,7 @@ exist(State, Key, CAS) ->
 save(State, Key, Value, CAS, Expiration, Flags) ->
   Expiration1 = if
                   Expiration =:= 0 -> 0;
-                  true -> edate:add(edate:today(), Expiration, seconds)
+                  true -> bucdate:add(bucdate:today(), Expiration, seconds)
                 end,
   Record = #r{
               key = Key,
@@ -125,7 +125,7 @@ remove(Data) ->
 expiration(0) -> 0;
 expiration(Date) ->
   Expiration = calendar:datetime_to_gregorian_seconds(Date) -
-               calendar:datetime_to_gregorian_seconds(edate:today()),
+  calendar:datetime_to_gregorian_seconds(bucdate:today()),
   if
     Expiration > 0 -> Expiration;
     true -> 1
@@ -173,7 +173,7 @@ open(#s{path = Path} = State) ->
     ok ->
       lager:info("Create schema."),
       _ = mnesia:create_table(r,
-                          [{disc_copies, [node()]}, {attributes, record_info(fields, r)}]),
+                              [{disc_copies, [node()]}, {attributes, record_info(fields, r)}]),
       created;
     {error,{_,{already_exists,_}}} ->
       lager:info("Schema already exist."),

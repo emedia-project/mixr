@@ -35,7 +35,7 @@ exist(State, Key, CAS) ->
     {Key, #r{cas = CAS1, expiration = 0}} when CAS =:= 0; CAS1 =:= CAS ->
       {true, State};
     {Key, #r{cas = CAS1, expiration = Expiration}} when CAS =:= 0; CAS1 =:= CAS ->
-      case edate:compare(Expiration, edate:today()) of
+      case bucdate:compare(Expiration, bucdate:today()) of
         -1 ->
           {true, State};
         _ ->
@@ -48,7 +48,7 @@ exist(State, Key, CAS) ->
 save(State, Key, Value, CAS, Expiration, Flags) ->
   Expiration1 = if
                   Expiration =:= 0 -> 0;
-                  true -> edate:add(edate:today(), Expiration, seconds)
+                  true -> bucdate:add(bucdate:today(), Expiration, seconds)
                 end,
   Record = #r{
               key = Key,
@@ -120,7 +120,7 @@ remove(State, Key) ->
 expiration(0) -> 0;
 expiration(Date) ->
   Expiration = calendar:datetime_to_gregorian_seconds(Date) -
-               calendar:datetime_to_gregorian_seconds(edate:today()),
+  calendar:datetime_to_gregorian_seconds(bucdate:today()),
   if
     Expiration > 0 -> Expiration;
     true -> 1

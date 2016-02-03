@@ -45,13 +45,13 @@ start_link() ->
 
 server_ip() ->
   case ip() of
-    IP when is_tuple(IP), IP =/= {0,0,0,0} -> eutils:to_binary(enet:ip_to_str(IP));
-    _ -> eutils:to_binary(enet:ip_to_str(enet:get_active_ip()))
+    IP when is_tuple(IP), IP =/= {0,0,0,0} -> bucs:to_binary(bucinet:ip_to_string(IP));
+    _ -> bucs:to_binary(bucinet:ip_to_string(bucinet:active_ip()))
   end.
 
 version() ->
   case application:get_key(mixr, vsn) of
-    {ok, Vsn} -> eutils:to_binary(Vsn);
+    {ok, Vsn} -> bucs:to_binary(Vsn);
     _ -> <<"undefined">>
   end.
 

@@ -1,8 +1,8 @@
 PROJECT = mixr
 
-DEPS = lager eutils cowboy eredis 
+DEPS = lager bucs cowboy eredis 
 dep_lager = git https://github.com/basho/lager.git master
-dep_eutils = git https://github.com/emedia-project/eutils.git master
+dep_bucs = git https://github.com/botsunit/bucs.git master
 dep_cowboy = git https://github.com/ninenines/cowboy.git master
 dep_eredis = git https://github.com/wooga/eredis.git master
 # mixr-plugins
@@ -31,4 +31,10 @@ EUNIT_OPTS = verbose, {report, {eunit_surefire, [{dir, "test"}]}}
 
 dev: deps app
 	@erl -pa ebin include deps/*/ebin deps/*/include -config config/mixr.config -setcookie mixr -name mixr1@127.0.0.1
+
+mixr1: deps app
+	@erl -pa ebin include deps/*/ebin deps/*/include -config config/mixr1.config -name mixr1@127.0.0.1 -setcookie mixr
+
+mixr2: deps app
+	@erl -pa ebin include deps/*/ebin deps/*/include -config config/mixr2.config -name mixr2@127.0.0.1 -setcookie mixr
 
