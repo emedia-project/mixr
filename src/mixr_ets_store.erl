@@ -27,7 +27,7 @@
          }).
 
 init(Args) ->
-  File = buclists:keyfind(file, 1, Args, filename:join([bucbile:user_home(),
+  File = buclists:keyfind(file, 1, Args, filename:join([bucfile:user_home(),
                                                         ".data-" ++ bucs:to_string(node()) ++ ".mixr"])),
   Tid = buclists:keyfind(tid, 1, Args, mixr),
   open(#s{file = File, tid = Tid}).

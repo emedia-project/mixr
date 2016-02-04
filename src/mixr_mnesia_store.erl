@@ -28,7 +28,7 @@
          }).
 
 init(Args) ->
-  Path = buclists:keyfind(path, 1, Args, filename:join([bucbile:user_home(),
+  Path = buclists:keyfind(path, 1, Args, filename:join([bucfile:user_home(),
                                                         ".mixr-" ++ bucs:to_string(node())])),
   open(#s{path = Path}).
 
