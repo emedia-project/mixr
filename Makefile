@@ -1,6 +1,6 @@
 PROJECT = mixr
 
-DEPS = lager bucs cowboy eredis
+DEPS = lager bucs cowboy eredis 
 dep_lager = git https://github.com/basho/lager.git master
 dep_bucs = git https://github.com/botsunit/bucs.git master
 dep_cowboy = git https://github.com/ninenines/cowboy.git master
