@@ -1,6 +1,6 @@
 @author Gregoire Lejeune <gregoire.lejeune@free.fr>
 @copyright 2015, 2016 G-Corp
-@version 1.0.0
+@version 1.0.2
 @title Memcached rewriten in pure Erlang
 @doc
 <h2>Mixr</h2>
@@ -133,7 +133,7 @@ If you want to dockerize <b>Mixr</b>, first, update <tt>Makefile</tt>, <tt>jorel
 
 You now have a <b>Mixr</b> image; so,you can start your container :
 
-<pre>docker run -d -v $(pwd)/data:/data -p 11212:11212 -e "MIXR_VM_NAME=mixr1@127.0.0.1" mixr:1.0.1-pre</pre>
+<pre>docker run -d -v $(pwd)/data:/data -p 11212:11212 -e "MIXR_VM_NAME=mixr1@127.0.0.1" mixr:1.0.2-pre</pre>
 
 <h2>TODO</h2>
 

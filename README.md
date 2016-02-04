@@ -4,7 +4,7 @@
 
 Copyright (c) 2015, 2016 G-Corp
 
-__Version:__ 1.0.0
+__Version:__ 1.0.2
 
 __Authors:__ Gregoire Lejeune ([`gregoire.lejeune@free.fr`](mailto:gregoire.lejeune@free.fr)).
 
@@ -177,7 +177,7 @@ make jorel.exec cmd=dockerize c=jorel.prod.config
 You now have a __Mixr__ image; so,you can start your container :
 
 ```
-docker run -d -v $(pwd)/data:/data -p 11212:11212 -e "MIXR_VM_NAME=mixr1@127.0.0.1" mixr:1.0.1-pre
+docker run -d -v $(pwd)/data:/data -p 11212:11212 -e "MIXR_VM_NAME=mixr1@127.0.0.1" mixr:1.0.2-pre
 ```
 
 
