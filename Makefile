@@ -38,3 +38,6 @@ mixr1: deps app
 mixr2: deps app
 	@erl -pa ebin include deps/*/ebin deps/*/include -config config/mixr2.config -name mixr2@127.0.0.1 -setcookie mixr
 
+deb: deps app
+	@make jorel.exec cmd=deb c=jorel.deb.config
+
