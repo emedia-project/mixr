@@ -6,6 +6,7 @@
 -export([
          init/1
          , terminate/1
+         , keys/1
          , count/1
          , exist/3
          , save/6
@@ -44,6 +45,16 @@ init(Args) ->
 
 terminate(_) ->
   ok.
+
+keys(connection_faild)-> {[], connection_faild};
+keys(#s{connection = C} = State) ->
+  Keys = case eredis:q(C, ["KEYS", key(State, "*")]) of
+            {ok, Data} -> Data;
+            _ -> 0
+          end,
+  {lists:zip(
+     lists:duplicate(length(Keys), <<"ITEM">>),
+     Keys), State}.
 
 count(connection_faild) -> {0, connection_faild};
 count(#s{connection = C} = State) ->

@@ -3,11 +3,25 @@
 -compile([{parse_transform, lager_transform}]).
 -include("../include/mixr.hrl"). 
 
--export([action/1]).
+-export([action/2]).
 
 action(#request_header{magic = ?REQUEST,
                        opcode = ?OP_STAT,
-                       opaque = Opaque}) ->
+                       opaque = Opaque}, <<"keys">>) ->
+  lager:info("[STAT] keys"),
+  {reply, lists:map(fun({Key, Value}) ->
+                        lager:info("~p = ~p", [Key, Value]),
+                        mixr_operation:build_response(#response_header{
+                                          opcode = ?OP_STAT,
+                                          opaque = Opaque,
+                                          key_length = size(Key),
+                                          body_length = size(Key) + size(Value),
+                                          extra_length = 0
+                                         }, <<>>, bucs:to_binary(Key), bucs:to_binary(Value))
+                    end, mixr_store:keys() ++ [{<<>>, <<>>}])};
+action(#request_header{magic = ?REQUEST,
+                       opcode = ?OP_STAT,
+                       opaque = Opaque}, _) ->
   lager:info("[STAT]"),
   IP = case doteki:get_env([mixr, server, ip], ?MIXR_DEFAULT_IP) of
          undefined -> bucinet:ip_to_binary(bucinet:active_ip());

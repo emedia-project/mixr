@@ -6,6 +6,7 @@
 
 -export([
          start_link/0
+         , keys/0
          , count/0
          , exist/1
          , exist/2
@@ -26,6 +27,9 @@
 
 start_link() ->
   gen_server:start_link({local, ?SERVER}, ?MODULE, [doteki:get_env([mixr, store], ?MIXR_DEFAULT_STORE)], []).
+
+keys() ->
+  gen_server:call(?SERVER, {keys, []}).
 
 count() ->
   gen_server:call(?SERVER, {count, []}).

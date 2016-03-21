@@ -7,6 +7,7 @@
 -export([
          init/1
          , terminate/1
+         , keys/1
          , count/1
          , exist/3
          , save/6
@@ -34,6 +35,16 @@ init(Args) ->
 
 terminate(_State) ->
   ok.
+
+keys(State) ->
+  case count(State) of
+    {0, _} -> {[], State};
+    _ ->
+      Keys = mnesia:activity(transaction,fun() -> mnesia:all_keys(r) end),
+      {lists:zip(
+         lists:duplicate(length(Keys), <<"ITEM">>),
+         Keys), State}
+  end.
 
 count(State) ->
   try

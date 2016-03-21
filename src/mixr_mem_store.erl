@@ -5,6 +5,7 @@
 -export([
          init/1
          , terminate/1
+         , keys/1
          , count/1
          , exist/3
          , save/6
@@ -26,6 +27,12 @@ init(_) ->
 
 terminate(_) ->
   ok.
+
+keys(State) ->
+  Keys = dict:fetch_keys(dict:from_list(State)),
+  {lists:zip(
+     lists:duplicate(length(Keys), <<"ITEM">>),
+     Keys), State}.
 
 count(State) ->
   {length(State), State}.

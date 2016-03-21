@@ -15,6 +15,9 @@
   -> ok
      | {error, term()}.
 
+-callback keys(state())
+  -> {list(), state()}.
+
 -callback count(state())
   -> {integer(), state()}.
 

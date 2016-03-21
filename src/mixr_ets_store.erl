@@ -5,6 +5,7 @@
 -export([
          init/1
          , terminate/1
+         , keys/1
          , count/1
          , exist/3
          , save/6
@@ -35,6 +36,22 @@ init(Args) ->
 terminate(State) ->
   _ = save(State),
   ok.
+
+keys(#s{tid = Tid} = State) ->
+  {keys(Tid, undefined, []), State}.
+
+keys(Tid, undefined, []) ->
+  case ets:first(Tid) of
+    '$end_of_table' -> [];
+    Key -> keys(Tid, Key, [{<<"ITEM">>, bucs:to_binary(Key)}])
+  end;
+keys(Tid, Prev, Acc) when Acc =/= [] ->
+  case ets:next(Tid, Prev) of
+    '$end_of_table' -> Acc;
+    Key -> keys(Tid, Key, [{<<"ITEM">>, bucs:to_binary(Key)}|Acc])
+  end;
+keys(_, _, _) ->
+  [].
 
 count(#s{tid = Tid} = State) ->
   case ets:info(Tid) of

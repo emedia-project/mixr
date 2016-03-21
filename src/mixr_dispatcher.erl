@@ -106,8 +106,8 @@ action(#request_header{magic = ?REQUEST,
 
 %% Stat
 action(#request_header{magic = ?REQUEST,
-                       opcode = ?OP_STAT} = Header, _) ->
-  mixr_op_stat:action(Header);
+                       opcode = ?OP_STAT} = Header, Key) ->
+  mixr_op_stat:action(Header, Key);
 
 %% Errors
 action(#request_header{magic = ?REQUEST,
