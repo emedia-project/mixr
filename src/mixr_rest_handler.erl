@@ -1,5 +1,6 @@
 % @hidden
 -module(mixr_rest_handler).
+-include("../include/mixr.hrl").
 
 -export([
          init/2
@@ -102,7 +103,7 @@ action(Req, #q{key = Key, cas = CAS, expire = Expire, extra = Extra} = State) ->
   end.
 
 find(Key) ->
-  Policy = mixr_config:search_policy(),
+  Policy = doteki:get_as_atom([mixr, search_policy], ?MIXR_DEFAULT_SEARCH_POLICY),
   case mixr_op_get:find(Policy, Key) of
     {_, {Key, Value, CAS, Expiration, _Flags}} = Data ->
       _ = mixr_op_get:save_if_needed(Policy, Data),

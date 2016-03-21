@@ -1,6 +1,7 @@
 % @hidden
 -module(mixr_store).
 -behaviour(gen_server).
+-include("../include/mixr.hrl").
 -define(SERVER, ?MODULE).
 
 -export([
@@ -24,7 +25,7 @@
           state}).
 
 start_link() ->
-  gen_server:start_link({local, ?SERVER}, ?MODULE, [mixr_config:store()], []).
+  gen_server:start_link({local, ?SERVER}, ?MODULE, [doteki:get_env([mixr, store], ?MIXR_DEFAULT_STORE)], []).
 
 count() ->
   gen_server:call(?SERVER, {count, []}).

@@ -1,10 +1,11 @@
 PROJECT = mixr
 
-DEPS = lager bucs cowboy eredis 
+DEPS = lager bucs doteki cowboy eredis 
 dep_lager = git https://github.com/basho/lager.git master
 dep_bucs = git https://github.com/botsunit/bucs.git master
-dep_cowboy = git https://github.com/ninenines/cowboy.git master
+dep_cowboy = git https://github.com/ninenines/cowboy.git 2.0.0-pre.3
 dep_eredis = git https://github.com/wooga/eredis.git master
+dep_doteki = git https://github.com/botsunit/doteki.git master
 # mixr-plugins
 # DEPS += mixr_freegeoip
 # dep_mixr_freegeoip = git https://github.com/emedia-project/mixr_freegeoip.git master

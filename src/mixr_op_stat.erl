@@ -9,6 +9,10 @@ action(#request_header{magic = ?REQUEST,
                        opcode = ?OP_STAT,
                        opaque = Opaque}) ->
   lager:info("[STAT]"),
+  IP = case doteki:get_env([mixr, server, ip], ?MIXR_DEFAULT_IP) of
+         undefined -> bucinet:ip_to_binary(bucinet:active_ip());
+         Other -> bucinet:ip_to_binary(Other)
+       end,
   {reply, lists:map(fun({Key, Value}) ->
                         lager:info("~p = ~p", [Key, Value]),
                         mixr_operation:build_response(#response_header{
@@ -23,9 +27,9 @@ action(#request_header{magic = ?REQUEST,
                           {<<"time">>, os_time()},
                           {<<"keys">>, bucs:to_binary(mixr_store:count())},
                           {<<"storage">>, bucs:to_binary(mixr_store:module())},
-                          {<<"search_policy">>, bucs:to_binary(mixr_config:search_policy())},
-                          {<<"ip">>, mixr_config:server_ip()},
-                          {<<"port">>, bucs:to_binary(mixr_config:port())},
+                          {<<"search_policy">>, doteki:get_as_binary([mixr, search_policy], ?MIXR_DEFAULT_SEARCH_POLICY)},
+                          {<<"ip">>, IP},
+                          {<<"port">>, doteki:get_as_binary([mixr, server, port], ?MIXR_DEFAULT_SERVER_PORT)},
                           {<<"servers">>, mixr_discover:servers_addrs()},
                           {<<>>, <<>>}])}. 
 

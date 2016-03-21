@@ -78,7 +78,7 @@ action(#request_header{magic = ?REQUEST,
                  Opcode =:= ?OP_GETQ ;
                  Opcode =:= ?OP_GETK ;
                  Opcode =:= ?OP_GETKQ ->
-  mixr_op_get:action(mixr_config:search_policy(), Header, Key);
+  mixr_op_get:action(doteki:get_as_atom([mixr, search_policy], ?MIXR_DEFAULT_SEARCH_POLICY), Header, Key);
 
 %% Delete
 action(#request_header{magic = ?REQUEST, 

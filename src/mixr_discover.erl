@@ -1,8 +1,9 @@
 % @hidden
-
 -module(mixr_discover).
 -behaviour(gen_server).
 -compile([{parse_transform, lager_transform}]).
+-include("../include/mixr.hrl").
+
 -export([start_link/0, discover/0, server_addr/0, servers_addrs/0, servers_nodes/0]).
 -export([init/1,
          handle_call/3,
@@ -21,15 +22,14 @@
 %-=====================================================================-
 
 start_link() ->
-  AutoDiscover = mixr_config:auto_discover(),
-  case lists:keyfind(enable, 1, AutoDiscover) of
-    {enable, true} ->
+  case doteki:get_as_atom([mixr, auto_discover, enable], ?MIXR_DEFAULT_DISCOVER_ENABLE) of
+    true ->
       gen_server:start_link({local, ?MODULE}, 
                             ?MODULE, 
                             [
-                             buclists:keyfind(addr, 1, AutoDiscover, {226, 0, 0, 1}),
-                             buclists:keyfind(port, 1, AutoDiscover, 6996),
-                             buclists:keyfind(multicast_ttl, 1, AutoDiscover, 1)
+                             bucinet:to_ip(doteki:get_env([mixr, auto_discover, ip], ?MIXR_DEFAULT_DISCOVER_IP)),
+                             doteki:get_as_integer([mixr, auto_discover, port], ?MIXR_DEFAULT_DISCOVER_PORT),
+                             doteki:get_as_integer([mixr, auto_discover, multicast_ttl], ?MIXR_DEFAULT_DISCOVER_MULTICAST_TTL)
                             ], []);
     _ ->
       ignore
@@ -39,7 +39,11 @@ discover() ->
   gen_server:call(?MODULE, discover).
 
 server_addr() ->
-  <<(mixr_config:server_ip())/binary, ":", (bucs:to_binary(mixr_config:port()))/binary>>.
+  IP = case doteki:get_env([mixr, auto_discover, ip], ?MIXR_DEFAULT_DISCOVER_IP) of
+    undefined -> bucinet:ip_to_binary(bucinet:active_ip());
+    Other -> bucinet:ip_to_binary(Other)
+  end,
+  <<IP/binary, ":", (doteki:get_as_binary([mixr, auto_discover, port], ?MIXR_DEFAULT_DISCOVER_PORT))/binary>>.
 
 servers_addrs() ->
   bucbinary:join(lists:foldl(fun(Node, Acc) ->

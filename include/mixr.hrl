@@ -1,4 +1,16 @@
--define(MIXR_VERSION, mixr_config:version()).
+-define(MIXR_VERSION, mixr:version()).
+-define(MIXR_DEFAULT_IP, undefined).
+-define(MIXR_DEFAULT_SERVER_PORT, 11212).
+-define(MIXR_DEFAULT_SERVER_ENABLE, true).
+-define(MIXR_DEFAULT_DISCOVER_ENABLE, true).
+-define(MIXR_DEFAULT_DISCOVER_IP, "226.0.0.1").
+-define(MIXR_DEFAULT_DISCOVER_PORT, 6969).
+-define(MIXR_DEFAULT_DISCOVER_MULTICAST_TTL, 1).
+-define(MIXR_DEFAULT_SEARCH_POLICY, local).
+-define(MIXR_DEFAULT_STORE, mixr_mem_store).
+-define(MIXR_DEFAULT_REST_ENABLE, false).
+-define(MIXR_DEFAULT_REST_PORT, 21212).
+-define(MIXR_DEFAULT_PLUGINS, []).
 
 -define(REQUEST, 128).
 -define(RESPONSE, 129).

@@ -2,7 +2,7 @@
 -module(mixr_rest).
 -behaviour(gen_server).
 -define(SERVER, ?MODULE).
--define(DEFAULT_REST_PORT, 21212).
+-include("../include/mixr.hrl").
 
 -export([
          start_link/0
@@ -20,11 +20,10 @@ start_link() ->
   gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
 
 init(_) ->
-  Rest = mixr_config:rest(),
-  case lists:keyfind(enable, 1, Rest) of
-    {enable, true} ->
+  case doteki:get_as_atom([mixr, rest, enable], ?MIXR_DEFAULT_REST_ENABLE) of
+    true ->
       _ = application:ensure_all_started(cowboy),
-      Port = buclists:keyfind(port, 1, Rest, ?DEFAULT_REST_PORT),
+      Port = doteki:get_as_integer([mixr, rest, port], ?MIXR_DEFAULT_REST_PORT),
       Dispatch = cowboy_router:compile([{'_', [
                                                {"/d/:key/cas/:cas[/:extra]", mixr_rest_handler, []},
                                                {"/d/:key/expire/:expire", mixr_rest_handler, []},
@@ -32,8 +31,12 @@ init(_) ->
                                                {"/count", mixr_rest_count_handler, []}
                                               ]
                                         }]),
+      Options = case doteki:get_env([mixr, rest, ip], ?MIXR_DEFAULT_IP) of
+                  undefined -> [{port, Port}];
+                  IP -> [{port, Port}, {ip, bucinet:to_ip(IP)}]
+                end,
       cowboy:start_http(http, 100,
-                        [{port, Port}],
+                        Options,
                         [{env, [{dispatch, Dispatch}]}]);
     _ ->
       ignore

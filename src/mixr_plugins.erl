@@ -2,6 +2,7 @@
 -module(mixr_plugins).
 -behaviour(gen_server).
 -compile([{parse_transform, lager_transform}]).
+-include("../include/mixr.hrl").
 -define(SERVER, ?MODULE).
 
 -export([
@@ -50,7 +51,7 @@ init(_) ->
                            lager:info("Faild to start plugin ~p", [Name]),
                            Acc
                        end
-                   end, #{}, mixr_config:plugins())}.
+                   end, #{}, doteki:get_env([mixr, plugins], ?MIXR_DEFAULT_PLUGINS))}.
 
 handle_call({find, Plugin, Key}, _From, State) ->
   case maps:get(bucs:to_atom(Plugin), State, '**undefined**') of
