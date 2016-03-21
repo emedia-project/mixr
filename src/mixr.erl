@@ -1,12 +1,8 @@
 -module(mixr).
+-include("../include/mixr.hrl").
 
 -export([start/0]).
--export([
-         version/0
-         , set/2
-         , get/1
-         , delete/1
-        ]).
+-export([version/0]).
 
 start() ->
   application:ensure_all_started(?MODULE).
@@ -17,14 +13,3 @@ version() ->
     _ -> <<"undefined">>
   end.
 
-%version() ->
-%  ok.
-
-set(_Key, _Value) ->
-  ok.
-
-get(_Key) ->
-  ok.
-
-delete(_Key) ->
-  ok.
